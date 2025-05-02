@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SNA Project – Code</title>
+  <style>
+    body {
+      font-family: monospace;
+      background-color: #1e1e1e;
+      color: #eaeaea;
+      padding: 40px;
+    }
+    pre {
+      background-color: #2d2d2d;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    a {
+      color: #61dafb;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <a href="index.html">← Back</a>
+  <pre>
+import pandas as pd
+# Load your top tags
+top_tags_df = pd.read_csv('top_tags.csv')
+# Define the categories, their tags, and their coordinates
+categories = {
+    "Putin": {
+        "tags": ['путин', 'владимир путин'],
+        "coordinates": (1, 0)
+    },
+    "Navalny+FBK": {
+        "tags": ['фбк', 'навальный', 'певчих', 'фонд борьбы с коррупцией', 'волков', 'сериал',
+'алексей навальный'],
+        "coordinates": (0, 1)
+    },
+    "What happened in 1990s?": {
+        "tags": ['предатели', 'ходорковский', 'абрамович', 'ельцин'],
+        "coordinates": (-1, 0)
+    },
+    "Trump’s role": {
+        "tags": ['трамп', 'переговоры'],
+        "coordinates": (0, -1)
+    }
+}
+# Prepare lists to build a new DataFrame
+organized_tags = []
+for index, row in top_tags_df.iterrows():
+    tag = row['Tag'].strip().lower()
+    count = row['Count']
+    found = False
+    for category, data in categories.items():
+        if tag in data['tags']:
+            organized_tags.append({
+                'Tag': tag,
+                'Count': count,
+                'Category': category,
+                'Coordinates': data['coordinates']
+            })
+            found = True
+            break
+    if not found:
+        pass
+# Create a new DataFrame
+categorized_tags_df = pd.DataFrame(organized_tags)
+categorized_tags_df.to_csv('categorized_tags_with_coordinates.csv', index=False)
+print("Done! Saved categorized tags to 'categorized_tags_with_coordinates.csv'")
+  </pre>
+
+  <pre>
+import pandas as pd
+import matplotlib.pyplot as plt
+# Load videos and categorized tags
+...
+plt.show()
+  </pre>
+
+  <pre>
+import pandas as pd
+from deep_translator import GoogleTranslator
+...
+print("Done! Translated tags saved to 'categorized_tags_with_coordinates_translated.csv'")
+  </pre>
+
+  <pre>
+import pandas as pd
+import matplotlib.pyplot as plt
+...
+plt.show()
+  </pre>
+
+  <pre>
+import pandas as pd
+import matplotlib.pyplot as plt
+from adjustText import adjust_text
+import matplotlib.colors as mcolors
+import numpy as np
+...
+plt.show()
+  </pre>
+</body>
+</html>
