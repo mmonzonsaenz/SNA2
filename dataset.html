@@ -38,6 +38,7 @@
 <body>
 
   <h1>Dataset Generation</h1>
+<div class="annotation">
   <p>This section will describe how the dataset for the SNA project was constructed.</p>
 
   <p>Step 1: We selected different videos from the five chosen parties manually.<br>
@@ -91,15 +92,21 @@ Generate the Google API for further usage:<br>
 
 
 Install Required Libraries Run the following command in Colab:<br>
-
+</div>
+  <pre class="code-block">
 !pip install google-api-python-client pandas<br>
-
+<pre class="code-block">
+  <div class="annotation">
 Import Libraries<br>
-
+</div>
+<pre class="code-block">
 from googleapiclient.discovery import build<br>
 import pandas as pd<br>
+  </pre>
+ <div class="annotation">
 Set Up API Key and Video IDs<br>
-
+</div>
+  <pre class="code-block">
 API_KEY = ' AIzaSyAUUwuf_vofeMpwo4qcmWHn_a_iWafPE1E '
 VIDEO_IDS = ['6xIeLJGcpfU','6uicsdZDw-Y','0Q5BY7N6Vv8','rX5apWMrf4c',
 '41NI4Y6frAQ','70bt2dBV1zI','0lDM2JVq8Y8','qqCYMqoUa5Q','4b6068q7Jtk',
@@ -107,10 +114,17 @@ VIDEO_IDS = ['6xIeLJGcpfU','6uicsdZDw-Y','0Q5BY7N6Vv8','rX5apWMrf4c',
 'E-NJs8-29yw','_wMvLpOnPQ','GioQp_j74eY','xxtCsa0j6eM','JKIb_qB_dXk',
 'hjVe7WztrdY','C2N83Rx-3kU','xVah87LKS04','oCSmIZPoxGM','p57ikQ0l97Y',
 'Qw1fsunO11Q']
-
+ </pre>
+   <div class="annotation">
 Initialize the YouTube API Client<br>
+     </div>
+  <pre class="code-block">
 youtube = build('youtube', 'v3', developerKey=API_KEY)<br>
+    </pre>
+  <div class="annotation">
 Define the get_video_metadata Function<br>
+     </div>
+  <pre class="code-block">
 def get_video_metadata(video_ids):<br>
     video_data = []<br>
     # Fetch metadata for each video ID<br>
@@ -135,19 +149,56 @@ def get_video_metadata(video_ids):<br>
 video_data.append([video_id, title, channel, tags_str, view_count, like_count, comment_count])<br>
 
     return video_data<br>
-
+     </pre>
+<div class="annotation">
 Fetch Metadata<br>
+   </div>
+      <pre class="code-block">
 metadata = get_video_metadata(VIDEO_IDS)<br>
+      </pre>
+      <div class="annotation">
 Convert to DataFrame<br>
+      </div>
+   <pre class="code-block">
 df = pd.DataFrame(metadata, columns=["Video ID", "Title", "Channel", "Tags", "Views", "Likes", "Comments"])<br>
+      </pre>
+  <div class="annotation">
 Save DataFrame as a CSV File<br>
+     </div>
+   <pre class="code-block">
 df.to_csv("youtube_video_metadata.csv", index=False, encoding="utf-8")<br>
 Prints a message to confirm that the data has been saved successfully.<br>
 print ("Metadata has been saved to youtube_video_metadata.csv!")<br>
+     </pre>
+  <div class="annotation">
 Download the CSV File<br>
+     </div>
+  <pre class="code-block">
 from google.colab import files<br>
 files.download('youtube_comments.csv')<br>
+     </pre>
 </p>
+.annotation {
+  background-color: #e6f2ff;
+  border-left: 4px solid #3498db;
+  padding: 10px 15px;
+  margin: 20px 0;
+  border-radius: 4px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #333;
+}
 
+.code-block {
+  background-color: #2d2d2d;
+  color: #eaeaea;
+  padding: 15px;
+  border-radius: 6px;
+  font-family: monospace;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  margin: 20px 0;
+  font-size: 15px;
+}
 </body>
 </html>
