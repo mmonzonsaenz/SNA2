@@ -211,24 +211,38 @@ def get_comments(video_id):
     return comments
 </pre>
 
-<div class="annotation">Fetch Comments and Save</div>
+<p class="annotation">We used Google Colab to extract all the comments from the videos, including video IDs, author, comment text, likes, and publish time. The following code fetches the comments for each video ID provided.</p>
+
 <pre class="code">
+# Fetch Comments for All Video IDs
 all_comments = []
 for video_id in VIDEO_IDS:
+    print(f"Fetching comments for video ID: {video_id}")
     try:
         comments = get_comments(video_id)
         all_comments.extend(comments)
     except Exception as e:
         print(f"Error fetching comments for video ID {video_id}: {e}")
-
-df = pd.DataFrame(all_comments, columns=["Video ID", "Author", "Comment", "Likes", "Published At"])
-df.to_csv("youtube_comments.csv", index=False, encoding="utf-8")
-print("Metadata has been saved to youtube_comments.csv!")
 </pre>
 
+<p class="annotation">The comments for all videos are gathered in the `all_comments` list. If an error occurs while fetching comments for a specific video ID, an error message is printed, but the program continues fetching the other videos.</p>
+
 <pre class="code">
+# Convert Comments to a DataFrame
+df = pd.DataFrame(all_comments, columns=["Video ID", "Author", "Comment", "Likes", "Published At"])
+
+# Save the DataFrame to a CSV File
+df.to_csv("youtube_video_metadata.csv", index=False, encoding="utf-8")
+
+# Prints a message to confirm that the data has been saved successfully.
+print ("Metadata has been saved to youtube_video_metadata.csv!")
+
+# Download the CSV File
 from google.colab import files
 files.download('youtube_comments.csv')
+</pre>
+
+<p class="annotation">After the comments are fetched, they are saved in a DataFrame and exported to a CSV file named `youtube_video_metadata.csv`. This file can be downloaded directly from the notebook.</p>
 </pre>
 
 </div>
