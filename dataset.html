@@ -2,183 +2,65 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Class Project</title>
- <style>
-  nav {
-    background-color: #2c3e50;
-    padding: 10px;
-  }
+  <title>Dataset Generation</title>
+  <style>
+    body {
+      font-family: monospace;
+      background-color: #1e1e1e;
+      color: #eaeaea;
+      padding: 40px;
+    }
 
-  nav a {
-    color: white;
-    margin-right: 20px;
-    text-decoration: none;
-    font-family: Arial, sans-serif;
-    font-weight: bold;
-  }
+    nav {
+      background-color: #2c3e50;
+      padding: 10px;
+    }
 
-  nav a:hover {
-    text-decoration: underline;
-  }
-</style>
+    nav a {
+      color: white;
+      margin-right: 20px;
+      text-decoration: none;
+      font-weight: bold;
+    }
 
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    pre {
+      background-color: #2d2d2d;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+
+    h1, h2 {
+      color: #61dafb;
+    }
+
+    a {
+      color: #61dafb;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
+  <nav>
+    <a href="/SNA2/index.html">Home</a>
+    <a href="/SNA2/code.html">View Code</a>
+    <a href="/SNA2/dataset.html">Dataset Generation</a>
+    <a href="/SNA2/code.html#downloads">Downloads</a>
+  </nav>
 
-<nav style="background-color: #2c3e50; padding: 10px;">
-  <a href="/SNA2/index.html" style="color: white; margin-right: 20px;">Home</a>
-  <a href="/SNA2/code.html" style="color: white; margin-right: 20px;">View Code</a>
-  <a href="/SNA2/dataset.html" style="color: white; margin-right: 20px;">Dataset Generation</a>
-  <a href="/SNA2/code.html#downloads" style="color: white;">Downloads</a>
-</nav>
+  <h1>Dataset Generation</h1>
 
-  <div class="container" id="code">
-    <h2>Code</h2>
+  <!-- Paste your dataset content here, such as steps, code, and images -->
 
-    <div class="annotation">
-      Part 1: We selected different videos from the five chosen parties manually.
-    </div>
-    <div class="annotation">
-      Step 1: Video selection
-    </div>
-    <pre><code>Shtefanov:
-1. https://www.youtube.com/watch?v=6xIeLJGcpfU&t=1s
-2. https://www.youtube.com/watch?v=6uicsdZDw-Y
-3. https://www.youtube.com/watch?v=0Q5BY7N6Vv8
-4. https://www.youtube.com/watch?v=rX5apWMrf4c
-5. https://www.youtube.com/watch?v=41NI4Y6frAQ
-
-Maxim Katz:
-1. https://www.youtube.com/watch?v=70bt2dBV1zI
-2. https://www.youtube.com/watch?v=0lDM2JVq8Y8
-3. https://www.youtube.com/watch?v=qqCYMqoUa5Q&t=10s
-4. https://www.youtube.com/watch?v=4b6068q7Jtk
-5. https://www.youtube.com/watch?v=H7KTb_IfJFU
-6. https://www.youtube.com/watch?v=6WW_4D3ARVM
-
-FBK (Volkov + Pevchikh + Alburov):
-1. https://www.youtube.com/watch?v=WpOLafcjT4Q
-2. https://www.youtube.com/watch?v=xQoUvHcXqhw
-3. https://www.youtube.com/watch?v=E-NJs8-29yw
-4. https://www.youtube.com/watch?v=-_wMvLpOnPQ
-5. https://www.youtube.com/watch?v=GioQp_j74eY
-6. https://www.youtube.com/watch?v=xxtCsa0j6eM
-7. https://www.youtube.com/watch?v=JKIb_qB_dXk
-8. https://www.youtube.com/watch?v=hjVe7WztrdY&t=26s
-9. https://www.youtube.com/watch?v=C2N83Rx-3kU
-
-Khodorkovsky:
-1. https://www.youtube.com/watch?v=xVah87LKS04
-2. https://www.youtube.com/watch?v=oCSmIZPoxGM
-3. https://www.youtube.com/watch?v=p57ikQ0l97Y
-4. https://www.youtube.com/watch?v=Qw1fsunO11Q</code></pre>
-
-    <div class="annotation">Part 2: We used Google Colab to extract video metadata into one CSV file.</div>
-    <div class="annotation">Step 1: Generate the Google API for further usage</div>
-    <div class="annotation">Step 2: Install Required Libraries</div>
-    <pre><code>!pip install google-api-python-client pandas</code></pre>
-    <div class="annotation">Step 3: Import Libraries</div>
-    <pre><code>from googleapiclient.discovery import build
-import pandas as pd</code></pre>
-    <div class="annotation">Step 4: Set Up API Key and Video IDs</div>
-    <pre><code>API_KEY = 'YOUR_API_KEY'
-VIDEO_IDS = ['6xIeLJGcpfU','6uicsdZDw-Y','0Q5BY7N6Vv8','rX5apWMrf4c','41NI4Y6frAQ','70bt2dBV1zI','0lDM2JVq8Y8','qqCYMqoUa5Q','4b6068q7Jtk','H7KTb_IfJFU','6WW_4D3ARVM','WpOLafcjT4Q','xQoUvHcXqhw','E-NJs8-29yw','_wMvLpOnPQ','GioQp_j74eY','xxtCsa0j6eM','JKIb_qB_dXk','hjVe7WztrdY','C2N83Rx-3kU','xVah87LKS04','oCSmIZPoxGM','p57ikQ0l97Y','Qw1fsunO11Q']</code></pre>
-    <div class="annotation">Step 5: Initialize the YouTube API Client</div>
-    <pre><code>youtube = build('youtube', 'v3', developerKey=API_KEY)</code></pre>
-    <div class="annotation">Step 6: Define the get_video_metadata Function</div>
-    <pre><code>def get_video_metadata(video_ids):
-    video_data = []
-    for video_id in video_ids:
-        request = youtube.videos().list(part="snippet,statistics", id=video_id)
-        response = request.execute()
-
-        for item in response.get("items", []):
-            video_id = item["id"]
-            title = item["snippet"]["title"]
-            channel = item["snippet"]["channelTitle"]
-            tags = item["snippet"].get("tags", [])
-            tags_str = ", ".join(tags)
-            view_count = item["statistics"].get("viewCount", 0)
-            like_count = item["statistics"].get("likeCount", 0)
-            comment_count = item["statistics"].get("commentCount", 0)
-            video_data.append([video_id, title, channel, tags_str, view_count, like_count, comment_count])
-    return video_data</code></pre>
-    <div class="annotation">Step 7: Fetch Metadata</div>
-    <pre><code>metadata = get_video_metadata(VIDEO_IDS)</code></pre>
-    <div class="annotation">Step 8: Convert to DataFrame</div>
-    <pre><code>df = pd.DataFrame(metadata, columns=["Video ID", "Title", "Channel", "Tags", "Views", "Likes", "Comments"])</code></pre>
-    <div class="annotation">Step 9: Save DataFrame as a CSV File</div>
-    <pre><code>df.to_csv("youtube_video_metadata.csv", index=False, encoding="utf-8")</code></pre>
-    <div class="annotation">Step 10: Confirmation Message</div>
-    <pre><code>print("Metadata has been saved to youtube_video_metadata.csv!")</code></pre>
-    <div class="annotation">Step 11: Download the CSV File</div>
-    <pre><code>from google.colab import files
-files.download('youtube_comments.csv')</code></pre>
-
-    <div class="annotation">Part 3: We used Google Colab to extract comments from the videos.</div>
-    <div class="annotation">Step 1: Generate the Google API for further usage</div>
-    <div class="annotation">Step 2: Install Required Libraries</div>
-    <pre><code>!pip install google-api-python-client pandas</code></pre>
-    <div class="annotation">Step 3: Import Libraries</div>
-    <pre><code>from googleapiclient.discovery import build
-import pandas as pd</code></pre>
-    <div class="annotation">Step 4: Set Up API Key and Video IDs</div>
-    <pre><code>API_KEY = 'YOUR_API_KEY'
-VIDEO_IDS = ['6xIeLJGcpfU','6uicsdZDw-Y','0Q5BY7N6Vv8','rX5apWMrf4c','41NI4Y6frAQ','70bt2dBV1zI','0lDM2JVq8Y8','qqCYMqoUa5Q','4b6068q7Jtk','H7KTb_IfJFU','6WW_4D3ARVM','WpOLafcjT4Q','xQoUvHcXqhw','E-NJs8-29yw','_wMvLpOnPQ','GioQp_j74eY','xxtCsa0j6eM','JKIb_qB_dXk','hjVe7WztrdY','C2N83Rx-3kU','xVah87LKS04','oCSmIZPoxGM','p57ikQ0l97Y','Qw1fsunO11Q']</code></pre>
-    <div class="annotation">Step 5: Initialize the YouTube API Client</div>
-    <pre><code>youtube = build('youtube', 'v3', developerKey=API_KEY)</code></pre>
-    <div class="annotation">Step 6: Define get_comments Function</div>
-    <pre><code>def get_comments(video_id):
-    comments = []
-    next_page_token = None
-    while True:
-        request = youtube.commentThreads().list(
-            part="snippet",
-            videoId=video_id,
-            pageToken=next_page_token,
-            maxResults=100,
-            textFormat="plainText"
-        )
-        response = request.execute()
-
-        for item in response.get("items", []):
-            comment = item["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
-            author = item["snippet"]["topLevelComment"]["snippet"]["authorDisplayName"]
-            like_count = item["snippet"]["topLevelComment"]["snippet"]["likeCount"]
-            published_at = item["snippet"]["topLevelComment"]["snippet"]["publishedAt"]
-            comments.append([video_id, author, comment, like_count, published_at])
-
-        next_page_token = response.get("nextPageToken")
-        if not next_page_token:
-            break
-    return comments</code></pre>
-    <div class="annotation">Step 7: Fetch Comments for All Video IDs</div>
-    <pre><code>all_comments = []
-for video_id in VIDEO_IDS:
-    print(f"Fetching comments for video ID: {video_id}")
-    try:
-        comments = get_comments(video_id)
-        all_comments.extend(comments)
-    except Exception as e:
-        print(f"Error fetching comments for video ID {video_id}: {e}")</code></pre>
-    <div class="annotation">Step 8: Convert Comments to a DataFrame</div>
-    <pre><code>df = pd.DataFrame(all_comments, columns=["Video ID", "Author", "Comment", "Likes", "Published At"])</code></pre>
-    <div class="annotation">Step 9: Save the DataFrame to a CSV File</div>
-    <pre><code>df.to_csv("youtube_video_metadata.csv", index=False, encoding="utf-8")</code></pre>
-    <div class="annotation">Step 10: Confirmation Message</div>
-    <pre><code>print("Metadata has been saved to youtube_video_metadata.csv!")</code></pre>
-    <div class="annotation">Step 11: Download the CSV File</div>
-    <pre><code>from google.colab import files
-files.download('youtube_comments.csv')</code></pre>
-  </div>
-<div class="container" id="downloads">
-  <h2>Downloads</h2>
-  <p>Click the links below to download the raw dataset files used in our project:</p>
-  <ul>
-    <li><a href="https://drive.google.com/file/d/16ZqjrvWiHlS1zrSOcqtu9klKSgGfrWPG/view" download>Download Video Metadata CSV</a></li>
-    <li><a href="https://drive.google.com/file/d/1IPkOZonZtfnyOklQB1IRf8uUAWnl4BGw/view?usp=drive_link" download>Download Comments CSV</a></li>
-  </ul>
-</div>
 </body>
 </html>
+
