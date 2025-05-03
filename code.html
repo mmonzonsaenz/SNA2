@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
   <nav style="background-color: #2c3e50; padding: 10px;">
-  <a href="index.html" style="color: white; margin-right: 20px;">Home</a>
-  <a href="code.html" style="color: white; margin-right: 20px;">View Code</a>
-  <a href="dataset.html" style="color: white;">Dataset Generation</a>
-  <a href="#downloads">Downloads</a>
-</nav>
+    <a href="index.html" style="color: white; margin-right: 20px;">Home</a>
+    <a href="code.html" style="color: white; margin-right: 20px;">View Code</a>
+    <a href="dataset.html" style="color: white; margin-right: 20px;">Dataset Generation</a>
+    <a href="#downloads" style="color: white;">Downloads</a>
+  </nav>
 <head>
   <meta charset="UTF-8">
   <title>SNA Project – Code</title>
@@ -26,6 +26,12 @@
     a {
       color: #61dafb;
       text-decoration: none;
+    }
+    .container {
+      margin-top: 40px;
+      padding: 20px;
+      background-color: #2d2d2d;
+      border-radius: 8px;
     }
   </style>
 </head>
@@ -83,21 +89,21 @@ print("Done! Saved categorized tags to 'categorized_tags_with_coordinates.csv'")
 import pandas as pd
 import matplotlib.pyplot as plt
 # Load videos and categorized tags
-...
+# (Code continues here)
 plt.show()
   </pre>
 
   <pre>
 import pandas as pd
 from deep_translator import GoogleTranslator
-...
+# (Code continues here)
 print("Done! Translated tags saved to 'categorized_tags_with_coordinates_translated.csv'")
   </pre>
 
   <pre>
 import pandas as pd
 import matplotlib.pyplot as plt
-...
+# (Code continues here)
 plt.show()
   </pre>
 
@@ -107,8 +113,27 @@ import matplotlib.pyplot as plt
 from adjustText import adjust_text
 import matplotlib.colors as mcolors
 import numpy as np
-...
+# (Code continues here)
 plt.show()
   </pre>
+
+  <div class="container" id="downloads">
+    <h2>Downloads</h2>
+    <p>Click the links below to access the raw dataset files hosted on Google Drive:</p>
+    <ul>
+      <li>
+        <strong>Comments Dataset:</strong><br>
+        <a href="https://drive.google.com/file/d/1IPkOZonZtfnyOklQB1IRf8uUAWnl4BGw/view?usp=drive_link" target="_blank">
+          View Comments CSV on Google Drive
+        </a>
+      </li>
+      <li style="margin-top: 1em;">
+        <strong>Tags Dataset:</strong><br>
+        <a href="https://drive.google.com/file/d/16ZqjrvWiHlS1zrSOcqtu9klKSgGfrWPG/view?usp=drive_link" target="_blank">
+          View Tags CSV on Google Drive
+        </a>
+      </li>
+    </ul>
+  </div>
 </body>
 </html>
