@@ -115,9 +115,7 @@ categorized_tags_df.to_csv('categorized_tags_with_coordinates.csv', index=False)
 # Save it to a CSV
 print("Done! Saved categorized tags to 'categorized_tags_with_coordinates.csv'") 
 
-
 After executing this step, we have this file = categorized_tags.csv - this file contains info about what category we have attributed to every tag. And we have this file = Categorized_tags_with_coordinates.csv - this file has tags, categories, and coordinates for every video. 
-
 
 Second Step 
 
@@ -173,7 +171,6 @@ plt.show()
 The Graph we see: 
 
 <img src="graph1.png" alt="Graph 1" style="max-width: 100%; margin: 20px 0;">
-
 
 We have decided to translate it into English. To do so, We have uploaded the translating library and translated all tags from Russian into English.
  
@@ -259,7 +256,6 @@ This is the graph we saw:
 
 <img src="graph2.png" alt="Graph 2" style="max-width: 100%; margin: 20px 0;">
 
-
 We really liked this graph. We liked everything about it. However, the titles are overlapping each other making it impossible to read them. We have decided to make the font a bit bigger, and make sure there are no overlappings of the titles. 
 To do so, we have uploaded a special library for text adjustment, and then used it to make sure the titles don’t overlap. 
 
@@ -320,20 +316,9 @@ plt.title('Videos Positioned by English Tags (No Overlaps)', fontsize=22, fontwe
 plt.grid(True)
 plt.show()
 
-
-
-
-
-
-
-
-
-
-
 Our graph: 
 
-
-
+<img src="graph3.png" alt="Graph 3" style="max-width: 100%; margin: 20px 0;">
 
 The Third Step
 
@@ -385,11 +370,7 @@ plt.title('Channel Color Mapping')
 plt.axis('off')
 plt.show()
 
-
-
-
-
-
+<img src="graph4.png" alt="Graph 4" style="max-width: 100%; margin: 20px 0;">
 
 We have this nice picture and this file = videos_with_colors.csv - which contains video Id, channel, and color. 
 Now, we want to use this file to apply it to the graph we have made in the Second Step. 
@@ -481,7 +462,7 @@ plt.show()
 
 Our Graph: 
 
-
+<img src="graph5.png" alt="Graph 5" style="max-width: 100%; margin: 20px 0;">
 
 Fifth Step 
 
@@ -568,6 +549,7 @@ plt.show()
 
 The Graph: 
 
+  <img src="graph6.png" alt="Graph 6" style="max-width: 100%; margin: 20px 0;">
 
 The whole graph is just grey now . To make sure that the edges are easily visible links between two nodes , we  increase default edge thickness and draw darker edges between nodes. 
  
@@ -804,6 +786,8 @@ plt.show()
 
 The graph: 
 
+<img src="graph7.png" alt="Graph 7" style="max-width: 100%; margin: 20px 0;">
+      
 We see that it is still hard to distinguish the separate edges. We have made modifications, so the edges on average would be thinner, yet keeping everything else intact. 
 Our code :
 import pandas as pd
@@ -890,7 +874,7 @@ plt.tight_layout()
 plt.show()
 The graph: 
 
-
+<img src="graph8.png" alt="Graph 8" style="max-width: 100%; margin: 20px 0;">
 
 It is better but it is still hard to tell from the graph what particular topics have the biggest number of shared commenters ( i.e. the users who commented on both videos). 
 Sixth Step 
@@ -1080,6 +1064,7 @@ plt.tight_layout()
 plt.show()
 The Graph: 
 
+  <img src="graph9.png" alt="Graph 9" style="max-width: 100%; margin: 20px 0;">
 
 We have done a lot of work and we are very happy with the graph. However, the width of the lines is still the same. We 
 import pandas as pd
@@ -1198,19 +1183,9 @@ plt.legend(handles=channel_legend + legend_edge,
 plt.tight_layout()
 plt.show()
 
-
+<img src="graph10.png" alt="Graph 10" style="max-width: 100%; margin: 20px 0;">
+      
 Now make the average corner thickness larger, but let the rank be reflected by the saturation of the color. let it be pink. the brighter the pink, the higher the category and more users. make sure the legend reflects this too 
-
-
-
-
-
-
-
-
-
-
-
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -1332,7 +1307,7 @@ plt.legend(handles=channel_legend + legend_edge,
 plt.tight_layout()
 plt.show()
 
-
+<img src="graph11.png" alt="Graph 11" style="max-width: 100%; margin: 20px 0;">
 
 Step Number Seven: Towards Efficiency 
 As you can see, it was a long journey from uploading the two big csv files till the end result. Now, we want to make a code for the most efficient way to run a code. So, a potential user could just upload two big files: a csv file named youtube_comments.csv which contains columns: Video ID, Author, Comment, Likes, Published At. And a csv file named videos.csv which contains columns: Video ID, Title, Channel, Tags, Views, Likes, Comments Video ID,Author,Comment,Likes,Published At. So a potential user could run this code and have the same graph in one click. 
@@ -1488,6 +1463,8 @@ plt.show()
 
 Our Graph: 
 
+<img src="graph12.png" alt="Graph 12" style="max-width: 100%; margin: 20px 0;">
+      
 It's great but the titles are overlapping, and I don't like the exact color. We are changing it to a different tint. We also have decided to make the saturation differences more obvious like ranging from light pink to dark red depending on the category. 
 
 
@@ -1642,7 +1619,8 @@ plt.show()
 
 Our Graph: 
 
-
+<img src="graph13.png" alt="Graph 13" style="max-width: 100%; margin: 20px 0;">
+      
 It is impressive, but the distinctions of colors are not reflected in the legend, and while the graph looks beautiful, it still is hard to tell what videos have the most number of shared commenters. 
 In this light, we decide to stick to four categories of edges: 1 = Green, 2 = Yellow, 3 = Orange, 4 = Red. Where the Green category stands for the least number of shared commenters and Red for the largest number of shared commenters. 
 Additionally, we make two adjustments. One is to make the nodes (with the colors of the channels) significantly  bigger and move them to the surface level, so the edges would not overlap them. 
@@ -1805,6 +1783,8 @@ plt.show()
 
 Our Graph:
 
+<img src="graph14.png" alt="Graph 14" style="max-width: 100%; margin: 20px 0;">
+      
 As we can see the parts of our graph are positioned outside of the scale. We make sure that the scaling allows for our whole graph to be depicted and visibly comprehensible. 
 
 Our code: 
@@ -1960,7 +1940,7 @@ plt.show()
 
 Our Graph: 
 
-
+<img src="graph15.png" alt="Graph 15" style="max-width: 100%; margin: 20px 0;">
 
 We see that at this step: 
 
@@ -2182,7 +2162,7 @@ plt.legend(handles=channel_legend_handles + edge_legend,
            bbox_to_anchor=(1.02, 1), loc='upper left')
 plt.show()
 
-
+<img src="graph16.png" alt="Graph 16" style="max-width: 100%; margin: 20px 0;">
 
 The last modification: we want the titles for the nodes containing the tags to be on the surface level, so they would be visible. 
 Our Code: 
@@ -2336,6 +2316,8 @@ plt.show()
 
 Our Graph: 
 
+<img src="graph17.png" alt="Graph 17" style="max-width: 100%; margin: 20px 0;">
+      
 </pre>
 
 <p>Our Graph:</p>
