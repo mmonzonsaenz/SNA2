@@ -50,7 +50,38 @@ nav a:hover {
   <h1>Data Analysis</h1>
 
   <pre>
-Here there will be text!
+This analysis project aimed at mapping and interpreting interaction networks between YouTube videos relative to Russian politics. The study combined thematic categorizations, graph visualizations, and user comment analysis. The methodology combines classical SNA principles with modern scraping, language processing, and data visualization approaches.
+specify channels that dominate 
+
+Methodology Overview
+
+Thematic Categorization: The most common tags were categorized into four ideological axes: Putin, Navalnyi+FBK, the 1990s in Russia, and Trump's influence.
+
+Translation & Visualization: Tags were translated from Russian to English, and videos were positioned within a 2D plane using the average coordinates of their tags.
+
+Channel-Based Coloring: Each channel was given its own color, allowing for mapping content sources.
+
+Commenter-Based Network: More than 40,000 users were detected who had commented on more than one video. Shared activity forms the edges between the videos, with thicker or saturated edges symbolizing stronger shared engagement.
+
+Visual Adjustments: Final stylizations were done to ensure that it is visually pleasant and readable, concerning the manual adjustment of title locations to prevent collisions and making the edges reflect the intensity and ranking of connections.
+
+Automation: A working version of the code was developed to automate the generation of the entire graph from just two CSV files, thus allowing easier reproduction.
+
+Key findings:
+
+Thematic Perspectives Across the Network: Videos were not randomly scattered around the graph but rather clustered along definite ideological poles, thus reflecting the bimodal nature of discourse. Navalny and opposition videos formed one cluster, while another cluster consisted of more overtly pro-Putin content. This highlights the point that the political sites on YouTube have ideological segmentation. 
+Highly Connected Communities of Users: Close to a hundred thousand users commenting on more than one video denotes active engagement. The resulting structure shows strong cohesion, therefore fragmentation of ideological clusters and only very few videos acting like a link between the once distant communities. This helps deepen our appreciation of how political narratives gain ground and cross-ideological fronts on that platform.
+Channel-wide Discursive Territory: Coding each channel with a unique color made it clear that specific channels tend to multiply within an ideological space. Some hang out more in the "Putin" area; others usually hang around in the opposition space. Hence, channels are not mere conduits of content but whole discursive spaces in themselves.
+Uneven Distribution of Category Connectivity: Preferential treatment analysis of the categories linking videos through user comments shows that some connections build such audiences more than others. Hence, a few effort centers probably preside: viral content or politicized topics.
+The Tags' Correlation with Audience Behavior: There was a strong correlation between similarly tagged videos and their user comments. In other words, users would share if all video tags were aligned thematically. This is a perfect empirical example of homophily: users attract content and interact with it based on their convictions. 
+Tags and Audiences Shared Interlinks: Deeper scrutiny of red-edge connections- whether videos share commenters or not- has shown that some tags have exceptionally interconnected audiences. Tags associated with "Navalnyi," "corruption," "Putin speech," and "Russian protests" turned out to be those linking videos most often through their everyday users. These tags correspond to politically charged or polarized issues, suggesting that viewers interested in these topics actively cross-navigate between multiple videos addressing similar issues. This is even more evidence for thematic homophily, pointing toward the presence of tightly-knit communities of political interest and activism on the platform.
+
+
+Conclusion
+
+This project realizes the successful application of SNA to digital media, allowing one to view in fine detail the circulation and clustering of political content on YouTube. Analysis of both the content and the users who interact with it brings forth polarization, ideological homophily, and attention hubs.
+The automated final script represents a valuable methodological contribution that may thus allow for the reproduction of this analysis with other datasets or even in different contexts.
+
   </pre>
 </body>
 </html>
