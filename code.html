@@ -11,22 +11,38 @@
   <meta charset="UTF-8">
   <title>SNA Project – Code</title>
   <style>
-  nav {
-    background-color: #2c3e50;
-    padding: 10px;
-  }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-  nav a {
-    color: white;
-    margin-right: 20px;
-    text-decoration: none;
-    font-family: Arial, sans-serif;
-    font-weight: bold;
-  }
+body {
+  padding-top: 80px; /* creates space for the fixed navbar */
+}
 
-  nav a:hover {
-    text-decoration: underline;
-  }
+nav {
+  background-color: #2c3e50;
+  padding: 10px;
+  width: 100%;
+  position: fixed;  /* makes navbar fixed */
+  top: 0;           /* aligns to top */
+  left: 0;          /* aligns to left */
+  z-index: 1000;    /* ensures it stays above other content */
+}
+
+nav a {
+  color: white;
+  margin-right: 20px;
+  text-decoration: none;
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+}
+
+nav a:hover {
+  text-decoration: underline;
+}
+
 </style>
 
 </head>
