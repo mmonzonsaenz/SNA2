@@ -7,3 +7,5 @@ We've laid out our annotated code with graphs on the home page and included extr
 We do not have experience with coding and have struggled with fixing the nav bar fully for hours; hopefully you'll appreciate our humble first try at building a website from scratch!
 
 We hope you enjoy the project.
+
+This project was done by: Sarah Hinteregger, Martina Monzon, Kira Rodionova, and Ailing Meng. 
