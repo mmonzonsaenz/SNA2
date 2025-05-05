@@ -40,7 +40,11 @@
 <p>After uploading the libraries and identifying the most popular tags, we categorize the tags into four categories and assign each category an axis:</p>
 
 <pre>
-Our code:
+First Step 
+
+After uploading the libraries and identifying the most popular tags, we categorize the tags into four categories and assign each category an axis:
+
+Our code :
 import pandas as pd
 # Load your top tags
 top_tags_df = pd.read_csv('top_tags.csv')
@@ -51,8 +55,7 @@ categories = {
         "coordinates": (1, 0)
     },
     "Navalny+FBK": {
-        "tags": ['фбк', 'навальный', 'певчих', 'фонд борьбы с коррупцией', 'волков', 'сериал',
-'алексей навальный'],
+        "tags": ['фбк', 'навальный', 'певчих', 'фонд борьбы с коррупцией', 'волков', 'сериал', 'алексей навальный'],
         "coordinates": (0, 1)
     },
     "What happened in 1990s?": {
@@ -66,9 +69,11 @@ categories = {
 }
 # Prepare lists to build a new DataFrame
 organized_tags = []
+# Iterate over each row in top_tags
 for index, row in top_tags_df.iterrows():
-    tag = row['Tag'].strip().lower()
+    tag = row['Tag'].strip().lower()  # normalize tag to lowercase
     count = row['Count']
+    
     found = False
     for category, data in categories.items():
         if tag in data['tags']:
@@ -80,95 +85,2242 @@ for index, row in top_tags_df.iterrows():
             })
             found = True
             break
+    
+    # If the tag doesn't match any category, you can choose to skip it or add it as "Uncategorized"
     if not found:
         pass
+        # Optionally:
+        # organized_tags.append({
+        #     'Tag': tag,
+        #     'Count': count,
+        #     'Category': 'Uncategorized',
+        #     'Coordinates': (0, 0)
+        # })
 # Create a new DataFrame
 categorized_tags_df = pd.DataFrame(organized_tags)
 # Save it to a CSV
 categorized_tags_df.to_csv('categorized_tags_with_coordinates.csv', index=False)
-print("Done! Saved categorized tags to 'categorized_tags_with_coordinates.csv'")
-</pre>
+# Save it to a CSV
+print("Done! Saved categorized tags to 'categorized_tags_with_coordinates.csv'") 
 
-<p>After executing this step, we have this file = categorized_tags.csv - this file contains info about what category we have attributed to every tag. And we have this file = Categorized_tags_with_coordinates.csv - this file has tags, categories, and coordinates for every video.</p>
 
-<img src="sna_graph_step_1.png" alt="Step 1 Graph">
+After executing this step, we have this file = categorized_tags.csv - this file contains info about what category we have attributed to every tag. And we have this file = Categorized_tags_with_coordinates.csv - this file has tags, categories, and coordinates for every video. 
 
-<h2>Second Step</h2>
-<p>Now, we design a code that creates a dictionary that provides for every tag specific coordinates in a python format. The coordinates are calculated based on the average of all tags attributed to one video. We visualize it into a graph.</p>
 
-<pre>
-Our code:
+Second Step 
+
+Now, we design a code that creates a dictionary that provides for every tag specific coordinates in a python format. The coordinates are calculated based on the average of all tags attributed to one video. We visualize it into a graph. 
+
+Our code :
 import pandas as pd
 import matplotlib.pyplot as plt
 # Load videos and categorized tags
-...
+videos_df = pd.read_csv('videos.csv')
+categorized_tags_df = pd.read_csv('categorized_tags_with_coordinates.csv')
+# Prepare a tag ➔ coordinates dictionary
+tag_to_coords = {row['Tag']: eval(row['Coordinates']) for idx, row in categorized_tags_df.iterrows()}
+# Prepare lists for video coordinates
+video_positions = []
+video_titles = []
+# Loop through each video
+for idx, row in videos_df.iterrows():
+    tags_string = row['Tags']  # Adjust if your column name is slightly different
+    if pd.isna(tags_string):
+        continue  # Skip videos with no tags
+    
+    tags = [tag.strip().lower() for tag in tags_string.split(',')]
+    
+    # Get coordinates of the tags that exist in our categorized_tags
+    coords = [tag_to_coords[tag] for tag in tags if tag in tag_to_coords]
+    
+    if coords:  # Only if we found matching categorized tags
+        x_avg = sum([coord[0] for coord in coords]) / len(coords)
+        y_avg = sum([coord[1] for coord in coords]) / len(coords)
+        
+        video_positions.append((x_avg, y_avg))
+        video_titles.append(row['Title'])  # Adjust if your video title column is named differently
+# Split positions into X and Y
+x_coords = [pos[0] for pos in video_positions]
+y_coords = [pos[1] for pos in video_positions]
+# Create the scatter plot
+plt.figure(figsize=(12, 10))
+plt.scatter(x_coords, y_coords, c='green', alpha=0.7)
+# Annotate each point with a short video title
+for i, title in enumerate(video_titles):
+    plt.text(x_coords[i] + 0.05, y_coords[i] + 0.05, title, fontsize=8)
+# Draw axes lines
+plt.axhline(0, color='black', linewidth=0.8)
+plt.axvline(0, color='black', linewidth=0.8)
+# Set labels and title
+plt.xlabel('Dimension 1')
+plt.ylabel('Dimension 2')
+plt.title('Videos Positioned on 2D Political Scale')
+plt.grid(True)
 plt.show()
-</pre>
 
-<p>The Graph we see:</p>
-<img src="sna_graph_step_5.png" alt="Initial Graph in Russian">
+The Graph we see: 
 
-<p>We have decided to translate it into English. To do so, We have uploaded the translating library and translated all tags from Russian into English.</p>
 
-<pre>
-Our code:
+We have decided to translate it into English. To do so, We have uploaded the translating library and translated all tags from Russian into English.
+ 
+Our code :
 import pandas as pd
 from deep_translator import GoogleTranslator
-...
+# Load your categorized tags
+categorized_tags_df = pd.read_csv('categorized_tags_with_coordinates.csv')
+# Create a list to store translated tags
+translated_tags = []
+# Loop through each tag and translate
+for tag in categorized_tags_df['Tag']:
+    try:
+        translation = GoogleTranslator(source='auto', target='en').translate(tag)
+        translated_tags.append(translation)
+    except Exception as e:
+        print(f"Error translating {tag}: {e}")
+        translated_tags.append(tag)  # fallback to original if fails
+# Add the translated tags to the DataFrame
+categorized_tags_df['Tag_English'] = translated_tags
+# Save the new DataFrame
+categorized_tags_df.to_csv('categorized_tags_with_coordinates_translated.csv', index=False)
+# Save it to a CSV
 print(" Done! Translated tags saved to 'categorized_tags_with_coordinates_translated.csv'")
-</pre>
 
-<p>Now, we have this file = 'categorized_tags_with_coordinates_translated.csv' with all tags, being categorized and translated into english. We note that now, the relevant tags can be found under a column named Tag_English.</p>
+Now, we have this file = 'categorized_tags_with_coordinates_translated.csv' with all tags, being categorized and translated into english. We note that now, the relevant tags can be found under a column named Tag_English. 
+Now, we run the same code to produce a graph but using English tags, and also adjusting the size of the nodes to a slightly bigger one. 
 
-<p>Now, we run the same code to produce a graph but using English tags, and also adjusting the size of the nodes to a slightly bigger one.</p>
+Our code :
+import pandas as pd
+import matplotlib.pyplot as plt
+# Load videos and translated categorized tags
+videos_df = pd.read_csv('videos.csv')
+categorized_tags_df = pd.read_csv('categorized_tags_with_coordinates_translated.csv')
+# Prepare a tag ➔ coordinates dictionary (now using the English tags)
+tag_to_coords = {row['Tag_English']: eval(row['Coordinates']) for idx, row in categorized_tags_df.iterrows()}
+# Prepare lists for video coordinates
+video_positions = []
+video_tags_combined = []  # instead of video titles, we will show the tags
+# Loop through each video
+for idx, row in videos_df.iterrows():
+    tags_string = row['Tags']  # Assuming 'Tags' column still in Russian
+    if pd.isna(tags_string):
+        continue  # Skip videos with no tags
+    
+    tags = [tag.strip().lower() for tag in tags_string.split(',')]
+    
+    # Get English tags and coordinates if tag exists
+    coords = []
+    translated_tags = []
+    for tag in tags:
+        matching_rows = categorized_tags_df[categorized_tags_df['Tag'] == tag]
+        if not matching_rows.empty:
+            coords.append(eval(matching_rows.iloc[0]['Coordinates']))
+            translated_tags.append(matching_rows.iloc[0]['Tag_English'])
+    
+    if coords:  # Only if we found matching categorized tags
+        x_avg = sum([coord[0] for coord in coords]) / len(coords)
+        y_avg = sum([coord[1] for coord in coords]) / len(coords)
+        
+        video_positions.append((x_avg, y_avg))
+        video_tags_combined.append(", ".join(translated_tags))  # show translated tags instead of title
+# Split positions into X and Y
+x_coords = [pos[0] for pos in video_positions]
+y_coords = [pos[1] for pos in video_positions]
+# Create the scatter plot
+plt.figure(figsize=(14, 12))
+plt.scatter(x_coords, y_coords, c='blue', alpha=0.8, s=100)  # <-- BIGGER NODES (s=100)
+# Annotate each point with the English tags
+for i, tags in enumerate(video_tags_combined):
+    plt.text(x_coords[i] + 0.05, y_coords[i] + 0.05, tags, fontsize=9)
+# Draw axes lines
+plt.axhline(0, color='black', linewidth=1)
+plt.axvline(0, color='black', linewidth=1)
+# Set labels and title
+plt.xlabel('Dimension 1', fontsize=14)
+plt.ylabel('Dimension 2', fontsize=14)
+plt.title('Videos Positioned by English Tags on 2D Political Scale', fontsize=16)
+plt.grid(True)
+plt.show()
 
-<img src="sna_graph_step_4.png" alt="Graph with English Tags, Step 2 Updated">
+This is the graph we saw: 
 
-<p>We really liked this graph. We liked everything about it. However, the titles are overlapping each other making it impossible to read them. We have decided to make the font a bit bigger, and make sure there are no overlappings of the titles.</p>
 
-<p>To do so, we have uploaded a special library for text adjustment, and then used it to make sure the titles don’t overlap.</p>
 
-<pre>
-Our code:
+We really liked this graph. We liked everything about it. However, the titles are overlapping each other making it impossible to read them. We have decided to make the font a bit bigger, and make sure there are no overlappings of the titles. 
+To do so, we have uploaded a special library for text adjustment, and then used it to make sure the titles don’t overlap. 
+
+Our code :
 import pandas as pd
 import matplotlib.pyplot as plt
 from adjustText import adjust_text
-...
+# Load videos and translated categorized tags
+videos_df = pd.read_csv('videos.csv')
+categorized_tags_df = pd.read_csv('categorized_tags_with_coordinates_translated.csv')
+# Prepare a tag ➔ coordinates dictionary (using English tags)
+tag_to_coords = {row['Tag_English']: eval(row['Coordinates']) for idx, row in categorized_tags_df.iterrows()}
+# Prepare lists for video coordinates
+video_positions = []
+video_tags_combined = []
+# Loop through each video
+for idx, row in videos_df.iterrows():
+    tags_string = row['Tags']
+    if pd.isna(tags_string):
+        continue  # Skip videos with no tags
+    
+    tags = [tag.strip().lower() for tag in tags_string.split(',')]
+    
+    # Get English tags and coordinates if tag exists
+    coords = []
+    translated_tags = []
+    for tag in tags:
+        matching_rows = categorized_tags_df[categorized_tags_df['Tag'] == tag]
+        if not matching_rows.empty:
+            coords.append(eval(matching_rows.iloc[0]['Coordinates']))
+            translated_tags.append(matching_rows.iloc[0]['Tag_English'])
+    
+    if coords:
+        x_avg = sum([coord[0] for coord in coords]) / len(coords)
+        y_avg = sum([coord[1] for coord in coords]) / len(coords)
+        
+        video_positions.append((x_avg, y_avg))
+        video_tags_combined.append(", ".join(translated_tags))
+# Split positions into X and Y
+x_coords = [pos[0] for pos in video_positions]
+y_coords = [pos[1] for pos in video_positions]
+# Create the scatter plot
+plt.figure(figsize=(18, 16))  # Bigger figure size
+plt.scatter(x_coords, y_coords, c='blue', alpha=0.8, s=200)  # Even bigger nodes
+# Annotate each point
+texts = []
+for i, tags in enumerate(video_tags_combined):
+    texts.append(plt.text(x_coords[i], y_coords[i], tags, fontsize=14, fontweight='bold'))  # Bigger and bold font
+# Adjust text to prevent overlapping
+adjust_text(texts, arrowprops=dict(arrowstyle='->', color='gray', lw=1))
+# Draw axes lines
+plt.axhline(0, color='black', linewidth=1)
+plt.axvline(0, color='black', linewidth=1)
+# Set labels and title
+plt.xlabel('Dimension 1', fontsize=18, fontweight='bold')
+plt.ylabel('Dimension 2', fontsize=18, fontweight='bold')
+plt.title('Videos Positioned by English Tags (No Overlaps)', fontsize=22, fontweight='bold')
+plt.grid(True)
 plt.show()
-</pre>
 
-<p>Our graph:</p>
-<img src="sna_graph_step_3.png" alt="Graph with Adjusted Text (No Overlap)">
 
-<h2>Third Step</h2>
-<p>We identify all channels that have uploaded the videos which we are analyzing, and collect them into the file named unique_channels.csv. Then, we attribute to every unique channel a color. We make sure that the color is not in the [n.p.float64] format but in a format convenient to use the library matplotlib in the future. Because Kira learns from her mistakes.</p>
 
-<pre>
-Our code:
+
+
+
+
+
+
+
+
+Our graph: 
+
+
+
+
+The Third Step
+
+We identify all channels that have uploaded the videos which we are analyzing, and collect them into the file named unique_channels.csv.
+Our code :
+import pandas as pd
+# Load the videos.csv file
+videos_df = pd.read_csv('videos.csv')
+# Ensure the 'Channel' column is clean (in case of extra spaces or characters)
+videos_df.columns = videos_df.columns.str.strip()
+# Extract all unique channels from the 'Channel' column
+unique_channels = videos_df['Channel'].unique()
+# Convert the result to a DataFrame for easier viewing (optional)
+unique_channels_df = pd.DataFrame(unique_channels, columns=['Channel'])
+# Save the unique channels into a new CSV file
+unique_channels_df.to_csv('unique_channels.csv', index=False)
+# Print the unique channels
+print("Unique Channels:")
+print(unique_channels_df)
+
+Then, we attribute to every unique channel a color. We make sure that the color is not in the [n.p.float64] format but in a format convenient to use the library matplotlib in the future. Because Kira learns from her mistakes. 
+
+Our code :
+
 import pandas as pd
 import matplotlib.pyplot as plt
-...
+# Load the unique_channels.csv file
+unique_channels_df = pd.read_csv('unique_channels.csv')
+# Extract the unique channels from the 'Channel' column
+unique_channels = unique_channels_df['Channel'].unique()
+# Create a color map (using 'tab20' for a range of colors)
+colormap = plt.cm.get_cmap('tab20', len(unique_channels))
+# Create a dictionary to map each channel to a specific color in a format usable by matplotlib (RGB format)
+channel_colors = {channel: colormap(i)[:3] for i, channel in enumerate(unique_channels)}  # Excluding alpha
+# Load the original videos.csv file
+videos_df = pd.read_csv('videos.csv')
+# Map the colors to the 'Channel' column
+videos_df['Color'] = videos_df['Channel'].map(channel_colors)
+# Save the updated DataFrame with colors to a new CSV
+videos_df[['Video ID', 'Channel', 'Color']].to_csv('videos_with_colors.csv', index=False)
+# Display the first few rows with the color assigned to each channel
+print(videos_df[['Video ID', 'Channel', 'Color']].head())
+# Plot the colors for the channels (optional visualization)
+plt.figure(figsize=(10, 5))
+for i, channel in enumerate(unique_channels):
+    plt.scatter(i, 0, color=channel_colors[channel], label=channel, s=100)
+plt.legend(title="Channels")
+plt.title('Channel Color Mapping')
+plt.axis('off')
 plt.show()
-</pre>
 
-<p>We have this nice picture and this file = videos_with_colors.csv - which contains video Id, channel, and color.</p>
 
-<img src="sna_graph_step_2.png" alt="Step 3 - Channel Color Mapping">
 
-<h2>Fourth Step</h2>
-<p>Here, we merge our most important file = videos.csv with videos_with_colors.csv - to create a file which will unite: Video ID, Channel, and Color. (Simultaneously, we make sure that the titles don’t overlap and the data about the tags is extracted from the English version)</p>
 
-<p>Unfortunately, we again run into the problem with the colors. We had to upload an additional Library named numpy to fix it.</p>
 
-<pre>
-Our code:
+
+
+We have this nice picture and this file = videos_with_colors.csv - which contains video Id, channel, and color. 
+Now, we want to use this file to apply it to the graph we have made in the Second Step. 
+
+
+
+
+Fourth Step 
+
+Here, we merge our most important file = videos.csv with videos_with_colors.csv - to create a file which will unite: Video ID, Channel, and Color. ( Simultaneously, we make sure that the titles don’t overlap and the data about the tags is extracted from the English version) 
+
+Unfortunately, we again run into the problem with the colors. We had to upload an additional Library named numpy to fix it. 
+
+Our code :
+import pandas as pd
+import matplotlib.pyplot as plt
+from adjustText import adjust_text
+import matplotlib.colors as mcolors
+import numpy as np  # Import NumPy
+# Load videos and translated categorized tags
+videos_df = pd.read_csv('videos.csv')
+categorized_tags_df = pd.read_csv('categorized_tags_with_coordinates_translated.csv')
+# Load the videos_with_colors.csv to get the color information
+videos_with_colors_df = pd.read_csv('videos_with_colors.csv')
+# Merge videos_df with videos_with_colors_df to get the color information
+videos_df = pd.merge(videos_df, videos_with_colors_df[['Video ID', 'Color']], on='Video ID', how='left')
+# Prepare a tag ➔ coordinates dictionary (using English tags)
+tag_to_coords = {row['Tag_English']: eval(row['Coordinates']) for idx, row in categorized_tags_df.iterrows()}
+# Prepare lists for video coordinates and their tags
+video_positions = []
+video_tags_combined = []
+video_colors = []
+# Function to convert RGB tuple to string
+def rgb_to_string(rgb_tuple):
+    # If the input is a NumPy array, convert it to a list first
+    if isinstance(rgb_tuple, np.ndarray):
+        rgb_tuple = tuple(rgb_tuple)
+    return mcolors.to_hex(rgb_tuple)
+# Loop through each video
+for idx, row in videos_df.iterrows():
+    tags_string = row['Tags']  # Assuming original tags are in Russian
+    if pd.isna(tags_string):
+        continue  # Skip videos with no tags
+    
+    # Split tags and match with English tags
+    tags = [tag.strip().lower() for tag in tags_string.split(',')]
+    
+    # Get English tags and coordinates if tag exists
+    coords = []
+    translated_tags = []
+    for tag in tags:
+        matching_rows = categorized_tags_df[categorized_tags_df['Tag'] == tag]  # Match Russian tags
+        if not matching_rows.empty:
+            english_tag = matching_rows.iloc[0]['Tag_English']  # Get the English tag
+            coords.append(eval(matching_rows.iloc[0]['Coordinates']))  # Get the coordinates for the tag
+            translated_tags.append(english_tag)  # Add the English tag
+    
+    if coords:  # If we have found matching categorized tags
+        x_avg = sum([coord[0] for coord in coords]) / len(coords)  # Average X
+        y_avg = sum([coord[1] for coord in coords]) / len(coords)  # Average Y
+        
+        video_positions.append((x_avg, y_avg))
+        video_tags_combined.append(", ".join(translated_tags))  # Combine translated tags for annotation
+        
+        # Convert the color to a valid format
+        video_colors.append(rgb_to_string(eval(row['Color'])))  # Convert tuple to color string
+# Split positions into X and Y
+x_coords = [pos[0] for pos in video_positions]
+y_coords = [pos[1] for pos in video_positions]
+# Create the scatter plot
+plt.figure(figsize=(18, 16))  # Bigger figure size
+plt.scatter(x_coords, y_coords, c=video_colors, alpha=0.8, s=200)  # Colored nodes based on channel
+# Annotate each point with the English tags
+texts = []
+for i, tags in enumerate(video_tags_combined):
+    texts.append(plt.text(x_coords[i], y_coords[i], tags, fontsize=14, fontweight='bold'))  # Bigger and bold font
+# Adjust text to prevent overlapping
+adjust_text(texts, arrowprops=dict(arrowstyle='->', color='gray', lw=1))
+# Draw axes lines
+plt.axhline(0, color='black', linewidth=1)
+plt.axvline(0, color='black', linewidth=1)
+# Set labels and title
+plt.xlabel('Dimension 1', fontsize=18, fontweight='bold')
+plt.ylabel('Dimension 2', fontsize=18, fontweight='bold')
+plt.title('Videos Positioned by English Tags with Channel Colors (No Overlaps)', fontsize=22, fontweight='bold')
+plt.grid(True)
+# Show the plot
+plt.show()
+
+Our Graph: 
+
+
+
+Fifth Step 
+
+Now, our goal is to show the connections between the nodes in the graph ( where every node reflects a video)  that would reflect the users who commented on multiple videos.
+First, I upload a csv file named youtube_comments.csv which contains columns: video ID, comments, authors, likes, published at. 
+Secondly, I identify the users who made comments on at least two different videos ( or more). The name of the file is common_fans.csv 
+Then, I reflect those users via edges between the nodes on my graph. The more users made the comments on the two videos, the thicker the edge between the two nodes will be.
+Our Code: 
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+import numpy as np
+# Load data
+videos_df = pd.read_csv('videos.csv')
+categorized_tags_df = pd.read_csv('categorized_tags_with_coordinates_translated.csv')
+videos_with_colors_df = pd.read_csv('videos_with_colors.csv')
+comments_df = pd.read_csv('youtube_comments.csv')
+# Merge color info into main videos dataframe
+videos_df = pd.merge(videos_df, videos_with_colors_df[['Video ID', 'Color']], on='Video ID', how='left')
+# Create tag ➔ coordinate dictionary
+tag_to_coords = {row['Tag_English']: eval(row['Coordinates']) for _, row in categorized_tags_df.iterrows()}
+# Helper to convert RGB tuple to HEX
+def rgb_to_string(rgb_tuple):
+    if isinstance(rgb_tuple, str):
+        rgb_tuple = eval(rgb_tuple)
+    if isinstance(rgb_tuple, np.ndarray):
+        rgb_tuple = tuple(rgb_tuple)
+    return mcolors.to_hex(rgb_tuple)
+# Prepare data containers
+video_positions = {}
+video_tags_combined = {}
+video_colors = {}
+# Calculate position, tags, and colors per video
+for _, row in videos_df.iterrows():
+    video_id = row['Video ID']
+    if pd.isna(row['Tags']):
+        continue
+    tags = [tag.strip().lower() for tag in row['Tags'].split(',')]
+    coords, translated_tags = [], []
+    for tag in tags:
+        match = categorized_tags_df[categorized_tags_df['Tag'] == tag]
+        if not match.empty:
+            coords.append(eval(match.iloc[0]['Coordinates']))
+            translated_tags.append(match.iloc[0]['Tag_English'])
+    if coords:
+        x_avg = sum(x for x, _ in coords) / len(coords)
+        y_avg = sum(y for _, y in coords) / len(coords)
+        video_positions[video_id] = (x_avg, y_avg)
+        video_tags_combined[video_id] = ", ".join(translated_tags)
+        video_colors[video_id] = rgb_to_string(row['Color'])
+#  Group commenters per video
+video_authors = comments_df.groupby('Video ID')['Author'].apply(set).to_dict()
+#  Compute edges based on shared commenters
+edges = {}
+for v1 in video_positions:
+    for v2 in video_positions:
+        if v1 >= v2:
+            continue
+        authors1 = video_authors.get(v1, set())
+        authors2 = video_authors.get(v2, set())
+        common = authors1 & authors2
+        if len(common) >= 2:
+            edges[(v1, v2)] = len(common)
+# Plot the graph
+plt.figure(figsize=(20, 18))
+# Plot each video as a node
+for vid, (x, y) in video_positions.items():
+    plt.scatter(x, y, c=video_colors[vid], s=250, edgecolors='black')
+    plt.text(x, y, video_tags_combined[vid], fontsize=13, weight='bold')
+# Draw edges with varying thickness
+for (v1, v2), weight in edges.items():
+    x1, y1 = video_positions[v1]
+    x2, y2 = video_positions[v2]
+    plt.plot([x1, x2], [y1, y2], color='gray', alpha=0.6, linewidth=0.3 + 0.5 * weight)
+# Grid and labels
+plt.axhline(0, color='black', linewidth=1)
+plt.axvline(0, color='black', linewidth=1)
+plt.xlabel('Dimension 1', fontsize=16, fontweight='bold')
+plt.ylabel('Dimension 2', fontsize=16, fontweight='bold')
+plt.title('Videos Connected by Shared Commenters (Common Fans)', fontsize=20, fontweight='bold')
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+The Graph: 
+
+
+The whole graph is just grey now . To make sure that the edges are easily visible links between two nodes , we  increase default edge thickness and draw darker edges between nodes. 
+ 
+Our code :
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+import numpy as np
+# Load data
+videos_df = pd.read_csv('videos.csv')
+categorized_tags_df = pd.read_csv('categorized_tags_with_coordinates_translated.csv')
+videos_with_colors_df = pd.read_csv('videos_with_colors.csv')
+comments_df = pd.read_csv('youtube_comments.csv')
+# Merge color info into main videos dataframe
+videos_df = pd.merge(videos_df, videos_with_colors_df[['Video ID', 'Color']], on='Video ID', how='left')
+# Create tag ➔ coordinate dictionary
+tag_to_coords = {row['Tag_English']: eval(row['Coordinates']) for _, row in categorized_tags_df.iterrows()}
+# Helper to convert RGB tuple to HEX
+def rgb_to_string(rgb_tuple):
+    if isinstance(rgb_tuple, str):
+        rgb_tuple = eval(rgb_tuple)
+    if isinstance(rgb_tuple, np.ndarray):
+        rgb_tuple = tuple(rgb_tuple)
+    return mcolors.to_hex(rgb_tuple)
+# Prepare data containers
+video_positions = {}
+video_tags_combined = {}
+video_colors = {}
+# Calculate position, tags, and colors per video
+for _, row in videos_df.iterrows():
+    video_id = row['Video ID']
+    if pd.isna(row['Tags']):
+        continue
+    tags = [tag.strip().lower() for tag in row['Tags'].split(',')]
+    coords, translated_tags = [], []
+    for tag in tags:
+        match = categorized_tags_df[categorized_tags_df['Tag'] == tag]
+        if not match.empty:
+            coords.append(eval(match.iloc[0]['Coordinates']))
+            translated_tags.append(match.iloc[0]['Tag_English'])
+    if coords:
+        x_avg = sum(x for x, _ in coords) / len(coords)
+        y_avg = sum(y for _, y in coords) / len(coords)
+        video_positions[video_id] = (x_avg, y_avg)
+        video_tags_combined[video_id] = ", ".join(translated_tags)
+        video_colors[video_id] = rgb_to_string(row['Color'])
+# Group commenters per video
+video_authors = comments_df.groupby('Video ID')['Author'].apply(set).to_dict()
+# Compute edges based on shared commenters
+edges = {}
+for v1 in video_positions:
+    for v2 in video_positions:
+        if v1 >= v2:
+            continue
+        authors1 = video_authors.get(v1, set())
+        authors2 = video_authors.get(v2, set())
+        common = authors1 & authors2
+        if len(common) >= 2:
+            edges[(v1, v2)] = len(common)
+# Plot the graph
+plt.figure(figsize=(20, 18))
+# Plot each video as a node
+for vid, (x, y) in video_positions.items():
+    plt.scatter(x, y, c=video_colors[vid], s=250, edgecolors='black')
+    plt.text(x, y, video_tags_combined[vid], fontsize=13, weight='bold')
+# Draw edges with varying thickness
+for (v1, v2), weight in edges.items():
+    x1, y1 = video_positions[v1]
+    x2, y2 = video_positions[v2]
+    plt.plot([x1, x2], [y1, y2], color='gray', alpha=0.6, linewidth=0.3 + 0.5 * weight)
+# Grid and labels
+plt.axhline(0, color='black', linewidth=1)
+plt.axvline(0, color='black', linewidth=1)
+plt.xlabel('Dimension 1', fontsize=16, fontweight='bold')
+plt.ylabel('Dimension 2', fontsize=16, fontweight='bold')
+plt.title('Videos Connected by Shared Commenters (Common Fans)', fontsize=20, fontweight='bold')
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+The graph: 
+
+
+The whole graph is grey. Are there too many users who commented on multiple videos? Let’s  make a code to calculate the number of such users. 
+Our code :
+import pandas as pd
+# Load the comments data
+comments_df = pd.read_csv('youtube_comments.csv')
+# Group by 'Author' and count the number of unique videos each has commented on
+user_video_counts = comments_df.groupby('Author')['Video ID'].nunique()
+# Filter users who commented on 2 or more different videos
+multi_video_users = user_video_counts[user_video_counts >= 2]
+# Print the number of such users
+print(f"Number of users who commented on multiple videos: {len(multi_video_users)}")
+
+The number of such users turned out to be 40599. 
+
+I’ve decided to categorize the users based on the two videos which they have commented on. For example, category A will include those users who commented on both: video Q  [ video ID] and video S [ video ID]. One user can belong to several categories at once. I created a file named categorized_commenters.csv containing the columns with the name of the user and its category. 
+Our code :
+import pandas as pd
+from itertools import combinations
+# Load your comments data
+comments_df = pd.read_csv('youtube_comments.csv')
+# Group videos per author
+user_videos = comments_df.groupby('Author')['Video ID'].unique()
+# Prepare list to collect (author, category) entries
+categorized_users = []
+# Loop through each user
+for author, video_list in user_videos.items():
+    if len(video_list) < 2:
+        continue  # skip users with only one video
+    # Generate all unique pairs of videos this user commented on
+    for v1, v2 in combinations(sorted(video_list), 2):
+        category = f"{v1}__{v2}"  # format the category string
+        categorized_users.append({'Author': author, 'Category': category})
+# Convert to DataFrame
+categorized_df = pd.DataFrame(categorized_users)
+# Save to CSV
+categorized_df.to_csv('categorized_commenters.csv', index=False)
+print("Done! File 'categorized_commenters.csv' has been created.")
+
+Now, let’s rank all categories based on how many users they contain and put this data into the file named ranked_categories.csv. 
+Our code :
+import pandas as pd
+# Load the categorized commenters file
+df = pd.read_csv('categorized_commenters.csv')
+# Group by 'Category' and count how many users are in each
+category_counts = df.groupby('Category')['Author'].nunique().reset_index()
+# Rename column for clarity
+category_counts = category_counts.rename(columns={'Author': 'UserCount'})
+# Sort categories by number of users (descending)
+ranked_categories = category_counts.sort_values(by='UserCount', ascending=False)
+# Save to a CSV
+ranked_categories.to_csv('ranked_categories.csv', index=False)
+# Show top 10 categories
+print(ranked_categories.head(10))
+
+
+I calculate the number of categories there are. 
+Our code: 
+import pandas as pd
+df = pd.read_csv('categorized_commenters.csv')
+num_categories = df['Category'].nunique()
+print(f"Total number of unique categories (video pairs): {num_categories}")
+
+The total number of the categories is 276. Now, I will make a graph where the edges between the nodes reflect the category ( naturally, every category refers to only two videos, hence to two nodes). The thickness of the edge should be determined by the rank of the category. The higher it is on the list ( the more users it includes), the thicker it should be on the graph.   I will do that using the existing files:  ranked_categories.csv. and try to implement it into the graph we have generated in the fourth step. 
+Our code: 
 import pandas as pd
 import matplotlib.pyplot as plt
 from adjustText import adjust_text
 import matplotlib.colors as mcolors
 import numpy as np
-...
+# === Load all required files ===
+videos_df = pd.read_csv('videos.csv')
+categorized_tags_df = pd.read_csv('categorized_tags_with_coordinates_translated.csv')
+videos_with_colors_df = pd.read_csv('videos_with_colors.csv')
+ranked_categories_df = pd.read_csv('ranked_categories.csv')  # contains 'Category' and 'UserCount'
+# Merge color info into videos
+videos_df = pd.merge(videos_df, videos_with_colors_df[['Video ID', 'Color']], on='Video ID', how='left')
+# Prepare tag ➔ coordinates dictionary
+tag_to_coords = {row['Tag_English']: eval(row['Coordinates']) for _, row in categorized_tags_df.iterrows()}
+# Helper to convert RGB tuple to HEX
+def rgb_to_string(rgb_tuple):
+    if isinstance(rgb_tuple, str):
+        rgb_tuple = eval(rgb_tuple)
+    if isinstance(rgb_tuple, np.ndarray):
+        rgb_tuple = tuple(rgb_tuple)
+    return mcolors.to_hex(rgb_tuple)
+# === Step 1: Compute video positions and visuals ===
+video_positions_dict = {}
+video_tags_dict = {}
+video_colors_dict = {}
+for _, row in videos_df.iterrows():
+    video_id = row['Video ID']
+    if pd.isna(row['Tags']):
+        continue
+    tags = [tag.strip().lower() for tag in row['Tags'].split(',')]
+    coords, translated_tags = [], []
+    for tag in tags:
+        match = categorized_tags_df[categorized_tags_df['Tag'] == tag]
+        if not match.empty:
+            english_tag = match.iloc[0]['Tag_English']
+            coords.append(eval(match.iloc[0]['Coordinates']))
+            translated_tags.append(english_tag)
+    if coords:
+        x_avg = sum(c[0] for c in coords) / len(coords)
+        y_avg = sum(c[1] for c in coords) / len(coords)
+        video_positions_dict[video_id] = (x_avg, y_avg)
+        video_tags_dict[video_id] = ", ".join(translated_tags)
+        video_colors_dict[video_id] = rgb_to_string(row['Color'])
+# === Step 2: Prepare category edges with rank-based thinner thickness ===
+ranked_categories_df['Rank'] = ranked_categories_df['UserCount'].rank(method='min', ascending=False)
+max_rank = ranked_categories_df['Rank'].max()
+edges = []
+for _, row in ranked_categories_df.iterrows():
+    try:
+        v1, v2 = row['Category'].split('__')
+        if v1 in video_positions_dict and v2 in video_positions_dict:
+            pos1 = video_positions_dict[v1]
+            pos2 = video_positions_dict[v2]
+            rank = row['Rank']
+            # Thinner scaling: reduce multiplier from 0.5 to 0.1
+            thickness = 0.5 + (max_rank - rank) * 0.1
+            edges.append((pos1, pos2, thickness))
+    except Exception:
+        continue  # skip malformed entries
+# === Step 3: Plot the graph ===
+plt.figure(figsize=(20, 18))
+# Draw edges
+for pos1, pos2, thickness in edges:
+    plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], color='dimgray', linewidth=thickness, alpha=0.6)
+# Draw nodes
+for video_id, (x, y) in video_positions_dict.items():
+    plt.scatter(x, y, c=video_colors_dict[video_id], s=250, edgecolors='black')
+# Annotate nodes
+texts = []
+for video_id, (x, y) in video_positions_dict.items():
+    tag_label = video_tags_dict.get(video_id, '')
+    texts.append(plt.text(x, y, tag_label, fontsize=14, fontweight='bold'))
+adjust_text(texts, arrowprops=dict(arrowstyle='->', color='gray', lw=1))
+# Axes and title
+plt.axhline(0, color='black', linewidth=1)
+plt.axvline(0, color='black', linewidth=1)
+plt.xlabel('Dimension 1', fontsize=18, fontweight='bold')
+plt.ylabel('Dimension 2', fontsize=18, fontweight='bold')
+plt.title('Video Network Based on Shared Commenting Categories (Thinner Edges)', fontsize=22, fontweight='bold')
+plt.grid(True)
+plt.tight_layout()
 plt.show()
+
+
+
+
+The graph: 
+
+We see that it is still hard to distinguish the separate edges. We have made modifications, so the edges on average would be thinner, yet keeping everything else intact. 
+Our code :
+import pandas as pd
+import matplotlib.pyplot as plt
+from adjustText import adjust_text
+import matplotlib.colors as mcolors
+import numpy as np
+# === Load all required files ===
+videos_df = pd.read_csv('videos.csv')
+categorized_tags_df = pd.read_csv('categorized_tags_with_coordinates_translated.csv')
+videos_with_colors_df = pd.read_csv('videos_with_colors.csv')
+ranked_categories_df = pd.read_csv('ranked_categories.csv')  # contains 'Category' and 'UserCount'
+# Merge color info into videos
+videos_df = pd.merge(videos_df, videos_with_colors_df[['Video ID', 'Color']], on='Video ID', how='left')
+# Prepare tag ➔ coordinates dictionary
+tag_to_coords = {row['Tag_English']: eval(row['Coordinates']) for _, row in categorized_tags_df.iterrows()}
+# Helper to convert RGB tuple to HEX
+def rgb_to_string(rgb_tuple):
+    if isinstance(rgb_tuple, str):
+        rgb_tuple = eval(rgb_tuple)
+    if isinstance(rgb_tuple, np.ndarray):
+        rgb_tuple = tuple(rgb_tuple)
+    return mcolors.to_hex(rgb_tuple)
+# === Step 1: Compute video positions and visuals ===
+video_positions_dict = {}
+video_tags_dict = {}
+video_colors_dict = {}
+for _, row in videos_df.iterrows():
+    video_id = row['Video ID']
+    if pd.isna(row['Tags']):
+        continue
+    tags = [tag.strip().lower() for tag in row['Tags'].split(',')]
+    coords, translated_tags = [], []
+    for tag in tags:
+        match = categorized_tags_df[categorized_tags_df['Tag'] == tag]
+        if not match.empty:
+            english_tag = match.iloc[0]['Tag_English']
+            coords.append(eval(match.iloc[0]['Coordinates']))
+            translated_tags.append(english_tag)
+    if coords:
+        x_avg = sum(c[0] for c in coords) / len(coords)
+        y_avg = sum(c[1] for c in coords) / len(coords)
+        video_positions_dict[video_id] = (x_avg, y_avg)
+        video_tags_dict[video_id] = ", ".join(translated_tags)
+        video_colors_dict[video_id] = rgb_to_string(row['Color'])
+# === Step 2: Prepare category edges with rank-based thinner thickness ===
+ranked_categories_df['Rank'] = ranked_categories_df['UserCount'].rank(method='min', ascending=False)
+max_rank = ranked_categories_df['Rank'].max()
+edges = []
+for _, row in ranked_categories_df.iterrows():
+    try:
+        v1, v2 = row['Category'].split('__')
+        if v1 in video_positions_dict and v2 in video_positions_dict:
+            pos1 = video_positions_dict[v1]
+            pos2 = video_positions_dict[v2]
+            rank = row['Rank']
+            # Thinner scaling: reduce multiplier from 0.5 to 0.1
+            thickness = 0.5 + (max_rank - rank) * 0.1
+            edges.append((pos1, pos2, thickness))
+    except Exception:
+        continue  # skip malformed entries
+# === Step 3: Plot the graph ===
+plt.figure(figsize=(20, 18))
+# Draw edges
+for pos1, pos2, thickness in edges:
+    plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], color='dimgray', linewidth=thickness, alpha=0.6)
+# Draw nodes
+for video_id, (x, y) in video_positions_dict.items():
+    plt.scatter(x, y, c=video_colors_dict[video_id], s=250, edgecolors='black')
+# Annotate nodes
+texts = []
+for video_id, (x, y) in video_positions_dict.items():
+    tag_label = video_tags_dict.get(video_id, '')
+    texts.append(plt.text(x, y, tag_label, fontsize=14, fontweight='bold'))
+adjust_text(texts, arrowprops=dict(arrowstyle='->', color='gray', lw=1))
+# Axes and title
+plt.axhline(0, color='black', linewidth=1)
+plt.axvline(0, color='black', linewidth=1)
+plt.xlabel('Dimension 1', fontsize=18, fontweight='bold')
+plt.ylabel('Dimension 2', fontsize=18, fontweight='bold')
+plt.title('Video Network Based on Shared Commenting Categories (Thinner Edges)', fontsize=22, fontweight='bold')
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+The graph: 
+
+
+
+It is better but it is still hard to tell from the graph what particular topics have the biggest number of shared commenters ( i.e. the users who commented on both videos). 
+Sixth Step 
+In light of this, I make a new code for the graph that should meet the following conditions: 
+The nodes on the graph should have the color of the channel. There should be a legend on the side which would explain which channel has which color. 
+( Use this file = videos_with_colors.csv - which contains video Id, channel, and color. Make sure to use the library named numpy to avoid this error  that occurs when the color values which we have (in the form of tuples containing np.float64) are not directly recognized as valid color representations by Matplotlib. The color values need to be properly formatted as strings (e.g., 'rgb', 'rgba', or hexadecimal strings like '#RRGGBB'). 
+The nodes should be titled according to the english tags that the videos contain. 
+Use this file = 'categorized_tags_with_coordinates_translated.csv' with all tags, being categorized and translated into english. We note that now, the relevant tags can be found under a column named Tag_English. 
+The nodes on the graph should be allocated according to the following coordinates which reflect the tags that the video contains. 
+Use the dictionary  that provides for every tag specific coordinates in a python format. The coordinates are calculated based on the average of all tags attributed to one video. That’s how we did it last time: 
+import pandas as pd
+# Load your top tags
+top_tags_df = pd.read_csv('top_tags.csv')
+# Define the categories, their tags, and their coordinates
+categories = {
+    "Putin": {
+        "tags": ['путин', 'владимир путин'],
+        "coordinates": (1, 0)
+    },
+    "Navalny+FBK": {
+        "tags": ['фбк', 'навальный', 'певчих', 'фонд борьбы с коррупцией', 'волков', 'сериал', 'алексей навальный'],
+        "coordinates": (0, 1)
+    },
+    "What happened in 1990s?": {
+        "tags": ['предатели', 'ходорковский', 'абрамович', 'ельцин'],
+        "coordinates": (-1, 0)
+    },
+    "Trump’s role": {
+        "tags": ['трамп', 'переговоры'],
+        "coordinates": (0, -1)
+    }
+}
+# Prepare lists to build a new DataFrame
+organized_tags = []
+# Iterate over each row in top_tags
+for index, row in top_tags_df.iterrows():
+    tag = row['Tag'].strip().lower()  # normalize tag to lowercase
+    count = row['Count']
+    
+    found = False
+    for category, data in categories.items():
+        if tag in data['tags']:
+            organized_tags.append({
+                'Tag': tag,
+                'Count': count,
+                'Category': category,
+                'Coordinates': data['coordinates']
+            })
+            found = True
+            break
+    
+    # If the tag doesn't match any category, you can choose to skip it or add it as "Uncategorized"
+    if not found:
+        pass
+        # Optionally:
+        # organized_tags.append({
+        #     'Tag': tag,
+        #     'Count': count,
+        #     'Category': 'Uncategorized',
+        #     'Coordinates': (0, 0)
+        # })
+# Create a new DataFrame
+categorized_tags_df = pd.DataFrame(organized_tags)
+# Save it to a CSV
+categorized_tags_df.to_csv('categorized_tags_with_coordinates.csv', index=False)
+# Save it to a CSV
+print("Done! Saved categorized tags to 'categorized_tags_with_coordinates.csv'") 
+
+
+The edges between the nodes should reflect the category ( naturally, every category refers to only two videos, hence to two nodes). The thickness of the edge should be determined by the rank of the category. The higher it is on the list ( the more users it includes), the thicker it should be on the graph.   I will do that using the existing files:  ranked_categories.csv. But this time make the legend that would explicitly say what line width stands for what number of shared commenters. 
+Our code :
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+import numpy as np
+from matplotlib.lines import Line2D
+# === Load required CSVs ===
+videos_df = pd.read_csv('videos.csv')
+videos_with_colors_df = pd.read_csv('videos_with_colors.csv')
+categorized_tags_df = pd.read_csv('categorized_tags_with_coordinates_translated.csv')
+ranked_categories_df = pd.read_csv('ranked_categories.csv')
+# === Merge color and channel info and clean column names ===
+videos_df = pd.merge(
+    videos_df,
+    videos_with_colors_df[['Video ID', 'Channel', 'Color']],
+    on='Video ID',
+    how='left',
+    suffixes=('', '_from_colors')
+)
+# Rename to consistent names
+videos_df.rename(columns={
+    'Channel_from_colors': 'Channel',
+    'Color_from_colors': 'Color'
+}, inplace=True)
+# === Tag ➔ coordinate dictionary ===
+tag_to_coords = {row['Tag_English']: eval(row['Coordinates']) for _, row in categorized_tags_df.iterrows()}
+# === Helper: convert RGB/tuple/numpy to hex ===
+def rgb_to_hex(color_val):
+    if isinstance(color_val, str):
+        color_val = eval(color_val)
+    if isinstance(color_val, np.ndarray):
+        color_val = tuple(color_val)
+    return mcolors.to_hex(color_val)
+# === Compute node data ===
+video_positions = {}
+video_labels = {}
+video_colors = {}
+channel_color_legend = {}
+for _, row in videos_df.iterrows():
+    video_id = row['Video ID']
+    tags_string = row['Tags']
+    if pd.isna(tags_string):
+        continue
+    tags = [tag.strip().lower() for tag in tags_string.split(',')]
+    coords = []
+    translated_tags = []
+    for tag in tags:
+        match = categorized_tags_df[categorized_tags_df['Tag'] == tag]
+        if not match.empty:
+            coords.append(eval(match.iloc[0]['Coordinates']))
+            translated_tags.append(match.iloc[0]['Tag_English'])
+    if coords:
+        x_avg = sum(c[0] for c in coords) / len(coords)
+        y_avg = sum(c[1] for c in coords) / len(coords)
+        video_positions[video_id] = (x_avg, y_avg)
+        video_labels[video_id] = ", ".join(translated_tags)
+        color = rgb_to_hex(row['Color'])
+        video_colors[video_id] = color
+        channel = row.at['Channel']
+        if isinstance(channel, str):
+            channel_color_legend[channel] = color
+        else:
+            channel_color_legend['Unknown'] = color
+# === Process edges ===
+ranked_categories_df['Rank'] = ranked_categories_df['UserCount'].rank(method='min', ascending=False)
+max_shared = ranked_categories_df['UserCount'].max()
+edges = []
+for _, row in ranked_categories_df.iterrows():
+    try:
+        v1, v2 = row['Category'].split('__')
+        if v1 in video_positions and v2 in video_positions:
+            pos1 = video_positions[v1]
+            pos2 = video_positions[v2]
+            shared = row['UserCount']
+            thickness = 0.5 + (shared / max_shared) * 3
+            edges.append((pos1, pos2, thickness, shared))
+    except:
+        continue
+# === Plot graph ===
+plt.figure(figsize=(22, 20))
+# Edges
+for pos1, pos2, thickness, _ in edges:
+    plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], color='dimgray', linewidth=thickness, alpha=0.6)
+# Nodes
+for vid, (x, y) in video_positions.items():
+    plt.scatter(x, y, c=video_colors[vid], s=250, edgecolors='black')
+# Labels
+for vid, (x, y) in video_positions.items():
+    label = video_labels.get(vid, '')
+    plt.text(x + 0.03, y + 0.03, label, fontsize=13, fontweight='bold')
+# Axes, title, grid
+plt.axhline(0, color='black', linewidth=1)
+plt.axvline(0, color='black', linewidth=1)
+plt.xlabel('Dimension 1', fontsize=16, fontweight='bold')
+plt.ylabel('Dimension 2', fontsize=16, fontweight='bold')
+plt.title('Shared Commenter Network by Video Tags and Channels', fontsize=20, fontweight='bold')
+plt.grid(True)
+# === Legends ===
+# Channels
+channel_legend = [
+    Line2D([0], [0], marker='o', color='w', label=channel,
+           markerfacecolor=color, markersize=10)
+    for channel, color in channel_color_legend.items()
+]
+# Edge thickness
+thresholds = [10, 50, 100, 200]
+edge_legend = [
+    Line2D([0], [0], color='dimgray', linewidth=0.5 + (t / max_shared) * 3,
+           label=f'{t}+ shared commenters')
+    for t in thresholds
+]
+# Combine legends
+plt.legend(handles=channel_legend + edge_legend,
+           title='Legend (Channel Colors & Edge Thickness)',
+           bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=11)
+plt.tight_layout()
+plt.show()
+The Graph: 
+
+
+We have done a lot of work and we are very happy with the graph. However, the width of the lines is still the same. We 
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+import numpy as np
+from matplotlib.lines import Line2D
+# === Load required CSVs ===
+videos_df = pd.read_csv('videos.csv')
+videos_with_colors_df = pd.read_csv('videos_with_colors.csv')
+categorized_tags_df = pd.read_csv('categorized_tags_with_coordinates_translated.csv')
+ranked_categories_df = pd.read_csv('ranked_categories.csv')
+# === Merge and clean column names ===
+videos_df = pd.merge(
+    videos_df,
+    videos_with_colors_df[['Video ID', 'Channel', 'Color']],
+    on='Video ID',
+    how='left',
+    suffixes=('', '_from_colors')
+)
+videos_df.rename(columns={'Channel_from_colors': 'Channel', 'Color_from_colors': 'Color'}, inplace=True)
+# === Tag ➔ coordinate dictionary ===
+tag_to_coords = {row['Tag_English']: eval(row['Coordinates']) for _, row in categorized_tags_df.iterrows()}
+def rgb_to_hex(color_val):
+    if isinstance(color_val, str):
+        color_val = eval(color_val)
+    if isinstance(color_val, np.ndarray):
+        color_val = tuple(color_val)
+    return mcolors.to_hex(color_val)
+# === Compute node positions and labels ===
+video_positions = {}
+video_labels = {}
+video_colors = {}
+channel_color_legend = {}
+for _, row in videos_df.iterrows():
+    video_id = row['Video ID']
+    tags_string = row['Tags']
+    if pd.isna(tags_string): continue
+    tags = [tag.strip().lower() for tag in tags_string.split(',')]
+    coords, translated_tags = [], []
+    for tag in tags:
+        match = categorized_tags_df[categorized_tags_df['Tag'] == tag]
+        if not match.empty:
+            coords.append(eval(match.iloc[0]['Coordinates']))
+            translated_tags.append(match.iloc[0]['Tag_English'])
+    if coords:
+        x_avg = sum(c[0] for c in coords) / len(coords)
+        y_avg = sum(c[1] for c in coords) / len(coords)
+        video_positions[video_id] = (x_avg, y_avg)
+        video_labels[video_id] = ", ".join(translated_tags)
+        color = rgb_to_hex(row['Color'])
+        video_colors[video_id] = color
+        # ✅ Safe handling of Channel key
+        channel = row['Channel'] if isinstance(row['Channel'], str) else 'Unknown'
+        channel_color_legend[channel] = color
+# === Compute edge thickness based on rank ===
+ranked_categories_df['Rank'] = ranked_categories_df['UserCount'].rank(method='min', ascending=False)
+max_rank = ranked_categories_df['Rank'].max()
+min_rank = ranked_categories_df['Rank'].min()
+def scale_thickness(rank, min_width=0.5, max_width=5.0):
+    return max_width - (rank - min_rank) / (max_rank - min_rank) * (max_width - min_width)
+edges = []
+legend_samples = []
+for _, row in ranked_categories_df.iterrows():
+    try:
+        v1, v2 = row['Category'].split('__')
+        if v1 in video_positions and v2 in video_positions:
+            pos1 = video_positions[v1]
+            pos2 = video_positions[v2]
+            rank = row['Rank']
+            count = row['UserCount']
+            width = scale_thickness(rank)
+            edges.append((pos1, pos2, width, count))
+            legend_samples.append((width, count))
+    except:
+        continue
+# === Plot the graph ===
+plt.figure(figsize=(22, 20))
+# Edges
+for pos1, pos2, width, _ in edges:
+    plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], color='dimgray', linewidth=width, alpha=0.6)
+# Nodes
+for vid, (x, y) in video_positions.items():
+    plt.scatter(x, y, c=video_colors[vid], s=250, edgecolors='black')
+# Labels
+for vid, (x, y) in video_positions.items():
+    label = video_labels.get(vid, '')
+    plt.text(x + 0.03, y + 0.03, label, fontsize=13, fontweight='bold')
+# Axes
+plt.axhline(0, color='black', linewidth=1)
+plt.axvline(0, color='black', linewidth=1)
+plt.xlabel('Dimension 1', fontsize=16, fontweight='bold')
+plt.ylabel('Dimension 2', fontsize=16, fontweight='bold')
+plt.title('Shared Commenter Network by Rank of Category (Edge Width by Rank)', fontsize=20, fontweight='bold')
+plt.grid(True)
+# === Legends ===
+channel_legend = [
+    Line2D([0], [0], marker='o', color='w', label=channel,
+           markerfacecolor=color, markersize=10)
+    for channel, color in channel_color_legend.items()
+]
+# Edge width legend
+legend_samples = sorted(legend_samples, key=lambda x: x[0], reverse=True)
+legend_edge = []
+seen = set()
+for width, count in legend_samples:
+    rounded = round(count, -1)
+    if rounded not in seen:
+        seen.add(rounded)
+        legend_edge.append(Line2D([0], [0], color='dimgray', linewidth=width, label=f'{rounded}+ shared commenters'))
+    if len(legend_edge) >= 5:
+        break
+plt.legend(handles=channel_legend + legend_edge,
+           title='Legend (Channel Colors & Edge Width by Commenters Rank)',
+           bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=11)
+plt.tight_layout()
+plt.show()
+
+
+Now make the average corner thickness larger, but let the rank be reflected by the saturation of the color. let it be pink. the brighter the pink, the higher the category and more users. make sure the legend reflects this too 
+
+
+
+
+
+
+
+
+
+
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+import numpy as np
+from matplotlib.lines import Line2D
+# === Load data ===
+videos_df = pd.read_csv('videos.csv')
+videos_with_colors_df = pd.read_csv('videos_with_colors.csv')
+categorized_tags_df = pd.read_csv('categorized_tags_with_coordinates_translated.csv')
+ranked_categories_df = pd.read_csv('ranked_categories.csv')
+# === Merge and clean column names ===
+videos_df = pd.merge(
+    videos_df,
+    videos_with_colors_df[['Video ID', 'Channel', 'Color']],
+    on='Video ID',
+    how='left',
+    suffixes=('', '_from_colors')
+)
+videos_df.rename(columns={'Channel_from_colors': 'Channel', 'Color_from_colors': 'Color'}, inplace=True)
+# === Tag ➔ coordinate dictionary ===
+tag_to_coords = {row['Tag_English']: eval(row['Coordinates']) for _, row in categorized_tags_df.iterrows()}
+# === RGB helper ===
+def rgb_to_hex(color_val):
+    if isinstance(color_val, str):
+        color_val = eval(color_val)
+    if isinstance(color_val, np.ndarray):
+        color_val = tuple(color_val)
+    return mcolors.to_hex(color_val)
+# === Compute nodes ===
+video_positions = {}
+video_labels = {}
+video_colors = {}
+channel_color_legend = {}
+for _, row in videos_df.iterrows():
+    video_id = row['Video ID']
+    tags_string = row['Tags']
+    if pd.isna(tags_string): continue
+    tags = [tag.strip().lower() for tag in tags_string.split(',')]
+    coords, translated_tags = [], []
+    for tag in tags:
+        match = categorized_tags_df[categorized_tags_df['Tag'] == tag]
+        if not match.empty:
+            coords.append(eval(match.iloc[0]['Coordinates']))
+            translated_tags.append(match.iloc[0]['Tag_English'])
+    if coords:
+        x_avg = sum(c[0] for c in coords) / len(coords)
+        y_avg = sum(c[1] for c in coords) / len(coords)
+        video_positions[video_id] = (x_avg, y_avg)
+        video_labels[video_id] = ", ".join(translated_tags)
+        color = rgb_to_hex(row['Color'])
+        video_colors[video_id] = color
+        channel = row['Channel'] if isinstance(row['Channel'], str) else 'Unknown'
+        channel_color_legend[channel] = color
+# === Compute edge attributes: fixed thickness, variable pink ===
+ranked_categories_df['Rank'] = ranked_categories_df['UserCount'].rank(method='min', ascending=False)
+max_rank = ranked_categories_df['Rank'].max()
+min_rank = ranked_categories_df['Rank'].min()
+def get_pink_shade(rank):
+    # Normalize rank to 0–1 → then map to (light pink → deep pink)
+    intensity = 1 - (rank - min_rank) / (max_rank - min_rank)
+    return (1.0, intensity * 0.5 + 0.5, intensity * 0.7 + 0.3)  # R, G, B
+edges = []
+legend_samples = []
+for _, row in ranked_categories_df.iterrows():
+    try:
+        v1, v2 = row['Category'].split('__')
+        if v1 in video_positions and v2 in video_positions:
+            pos1 = video_positions[v1]
+            pos2 = video_positions[v2]
+            rank = row['Rank']
+            count = row['UserCount']
+            color = get_pink_shade(rank)
+            edges.append((pos1, pos2, color, count, rank))
+            legend_samples.append((color, count))
+    except:
+        continue
+# === Plot ===
+plt.figure(figsize=(22, 20))
+# Draw edges
+for pos1, pos2, color, _, _ in edges:
+    plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]],
+             color=color, linewidth=2.5, alpha=0.9)
+# Draw nodes
+for vid, (x, y) in video_positions.items():
+    plt.scatter(x, y, c=video_colors[vid], s=250, edgecolors='black')
+# Labels
+for vid, (x, y) in video_positions.items():
+    label = video_labels.get(vid, '')
+    plt.text(x + 0.03, y + 0.03, label, fontsize=13, fontweight='bold')
+# Axes, labels
+plt.axhline(0, color='black', linewidth=1)
+plt.axvline(0, color='black', linewidth=1)
+plt.xlabel('Dimension 1', fontsize=16, fontweight='bold')
+plt.ylabel('Dimension 2', fontsize=16, fontweight='bold')
+plt.title('Shared Commenter Network — Pink Saturation Reflects Category Rank', fontsize=20, fontweight='bold')
+plt.grid(True)
+# === Legend: Channels ===
+channel_legend = [
+    Line2D([0], [0], marker='o', color='w', label=channel,
+           markerfacecolor=color, markersize=10)
+    for channel, color in channel_color_legend.items()
+]
+# === Legend: Edge saturation ===
+legend_samples = sorted(legend_samples, key=lambda x: x[1], reverse=True)
+legend_edge = []
+seen = set()
+for color, count in legend_samples:
+    rounded = round(count, -1)
+    if rounded not in seen:
+        seen.add(rounded)
+        legend_edge.append(Line2D([0], [0], color=color, linewidth=3, label=f'{rounded}+ shared commenters'))
+    if len(legend_edge) >= 5:
+        break
+# Combine legends
+plt.legend(handles=channel_legend + legend_edge,
+           title='Legend:\nNode = Channel\nEdge = Shared Commenters (Color by Rank)',
+           bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=11)
+plt.tight_layout()
+plt.show()
+
+
+
+Step Number Seven: Towards Efficiency 
+As you can see, it was a long journey from uploading the two big csv files till the end result. Now, we want to make a code for the most efficient way to run a code. So, a potential user could just upload two big files: a csv file named youtube_comments.csv which contains columns: Video ID, Author, Comment, Likes, Published At. And a csv file named videos.csv which contains columns: Video ID, Title, Channel, Tags, Views, Likes, Comments Video ID,Author,Comment,Likes,Published At. So a potential user could run this code and have the same graph in one click. 
+ 
+Our Code: 
+
+# Install necessary libraries
+!pip install networkx pandas matplotlib numpy deep-translator adjustText
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+import matplotlib.colors as mcolors
+from deep_translator import GoogleTranslator
+import numpy as np
+from adjustText import adjust_text
+import matplotlib.cm as cm
+# === STEP 1: Load Input Files ===
+videos_df = pd.read_csv('videos.csv')
+comments_df = pd.read_csv('youtube_comments.csv')
+# === STEP 2: Identify Top Tags ===
+from collections import Counter
+all_tags = []
+for tag_string in videos_df['Tags'].dropna():
+    tags = [tag.strip().lower() for tag in tag_string.split(',')]
+    all_tags.extend(tags)
+tag_counter = Counter(all_tags)
+top_tags_df = pd.DataFrame(tag_counter.most_common(30), columns=['Tag', 'Count'])
+# === STEP 3: Categorize Tags into Coordinates ===
+categories = {
+    "Putin": {"tags": ['путин', 'владимир путин'], "coordinates": (1, 0)},
+    "Navalny+FBK": {"tags": ['фбк', 'навальный', 'певчих', 'фонд борьбы с коррупцией', 'волков', 'сериал', 'алексей навальный'], "coordinates": (0, 1)},
+    "What happened in 1990s?": {"tags": ['предатели', 'ходорковский', 'абрамович', 'ельцин'], "coordinates": (-1, 0)},
+    "Trump’s role": {"tags": ['трамп', 'переговоры'], "coordinates": (0, -1)}
+}
+organized_tags = []
+for _, row in top_tags_df.iterrows():
+    tag = row['Tag'].strip().lower()
+    count = row['Count']
+    for category, data in categories.items():
+        if tag in data['tags']:
+            organized_tags.append({
+                'Tag': tag,
+                'Count': count,
+                'Category': category,
+                'Coordinates': data['coordinates']
+            })
+            break
+categorized_tags_df = pd.DataFrame(organized_tags)
+# === STEP 4: Translate Tags to English ===
+translated_tags = []
+for tag in categorized_tags_df['Tag']:
+    try:
+        translated_tags.append(GoogleTranslator(source='auto', target='en').translate(tag))
+    except:
+        translated_tags.append(tag)
+categorized_tags_df['Tag_English'] = translated_tags
+# === STEP 5: Assign Colors to Channels ===
+unique_channels = videos_df['Channel'].unique()
+colormap = cm.get_cmap('tab20', len(unique_channels))
+channel_colors = {channel: colormap(i)[:3] for i, channel in enumerate(unique_channels)}
+videos_df['Color'] = videos_df['Channel'].map(channel_colors)
+# === STEP 6: Compute Video Positions by Tags ===
+def rgb_to_hex(color_val):
+    if isinstance(color_val, str): color_val = eval(color_val)
+    if isinstance(color_val, np.ndarray): color_val = tuple(color_val)
+    return mcolors.to_hex(color_val)
+tag_to_coords = {row['Tag_English']: row['Coordinates'] for _, row in categorized_tags_df.iterrows()}
+video_positions, video_labels, video_colors, channel_legend = {}, {}, {}, {}
+for _, row in videos_df.iterrows():
+    video_id = row['Video ID']
+    if pd.isna(row['Tags']): continue
+    tags = [t.strip().lower() for t in row['Tags'].split(',')]
+    coords, translated = [], []
+    for tag in tags:
+        match = categorized_tags_df[categorized_tags_df['Tag'] == tag]
+        if not match.empty:
+            coords.append(match.iloc[0]['Coordinates'])
+            translated.append(match.iloc[0]['Tag_English'])
+    if coords:
+        x_avg = sum(c[0] for c in coords) / len(coords)
+        y_avg = sum(c[1] for c in coords) / len(coords)
+        video_positions[video_id] = (x_avg, y_avg)
+        video_labels[video_id] = ", ".join(translated)
+        hex_color = rgb_to_hex(row['Color'])
+        video_colors[video_id] = hex_color
+        channel = row['Channel'] if isinstance(row['Channel'], str) else 'Unknown'
+        channel_legend[channel] = hex_color
+# === STEP 7: Compute Comment-Based Categories ===
+user_videos = comments_df.groupby('Author')['Video ID'].unique()
+categorized_users = []
+from itertools import combinations
+for author, vids in user_videos.items():
+    if len(vids) < 2: continue
+    for v1, v2 in combinations(sorted(vids), 2):
+        categorized_users.append({'Author': author, 'Category': f"{v1}__{v2}"})
+categorized_df = pd.DataFrame(categorized_users)
+category_counts = categorized_df.groupby('Category')['Author'].nunique().reset_index()
+category_counts = category_counts.rename(columns={'Author': 'UserCount'})
+ranked_categories_df = category_counts.sort_values(by='UserCount', ascending=False)
+# === STEP 8: Edge Weights (Rank → Pink Saturation) ===
+ranked_categories_df['Rank'] = ranked_categories_df['UserCount'].rank(method='min', ascending=False)
+max_rank = ranked_categories_df['Rank'].max()
+min_rank = ranked_categories_df['Rank'].min()
+def pink_shade(rank):
+    intensity = 1 - (rank - min_rank) / (max_rank - min_rank)
+    return (1.0, intensity * 0.5 + 0.5, intensity * 0.7 + 0.3)
+edges, legend_samples = [], []
+for _, row in ranked_categories_df.iterrows():
+    try:
+        v1, v2 = row['Category'].split('__')
+        if v1 in video_positions and v2 in video_positions:
+            color = pink_shade(row['Rank'])
+            edges.append((video_positions[v1], video_positions[v2], color, row['UserCount']))
+            legend_samples.append((color, row['UserCount']))
+    except:
+        continue
+# === STEP 9: Plot the Final Graph ===
+plt.figure(figsize=(22, 20))
+for pos1, pos2, color, _ in edges:
+    plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], color=color, linewidth=2.5, alpha=0.9)
+for vid, (x, y) in video_positions.items():
+    plt.scatter(x, y, c=video_colors[vid], s=250, edgecolors='black')
+for vid, (x, y) in video_positions.items():
+    label = video_labels.get(vid, '')
+    plt.text(x + 0.03, y + 0.03, label, fontsize=13, fontweight='bold')
+plt.axhline(0, color='black', linewidth=1)
+plt.axvline(0, color='black', linewidth=1)
+plt.xlabel('Dimension 1', fontsize=16, fontweight='bold')
+plt.ylabel('Dimension 2', fontsize=16, fontweight='bold')
+plt.title('Video Network — Shared Commenters + Topic Mapping', fontsize=20, fontweight='bold')
+plt.grid(True)
+# === Legends ===
+channel_legend_handles = [
+    Line2D([0], [0], marker='o', color='w', label=ch,
+           markerfacecolor=col, markersize=10)
+    for ch, col in channel_legend.items()
+]
+legend_samples = sorted(legend_samples, key=lambda x: x[1], reverse=True)
+seen, edge_legend = set(), []
+for color, count in legend_samples:
+    rounded = round(count, -1)
+    if rounded not in seen:
+        seen.add(rounded)
+        edge_legend.append(Line2D([0], [0], color=color, linewidth=3, label=f'{rounded}+ commenters'))
+    if len(edge_legend) >= 5:
+        break
+plt.legend(handles=channel_legend_handles + edge_legend,
+           title='Legend: Channels + Shared Commenters (edge)',
+           bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.tight_layout()
+plt.show()
+
+Our Graph: 
+
+It's great but the titles are overlapping, and I don't like the exact color. We are changing it to a different tint. We also have decided to make the saturation differences more obvious like ranging from light pink to dark red depending on the category. 
+
+
+Our code: 
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+import matplotlib.colors as mcolors
+from deep_translator import GoogleTranslator
+import numpy as np
+from adjustText import adjust_text
+import matplotlib.cm as cm
+import ast
+# === STEP 1: Load Input Files ===
+videos_df = pd.read_csv('videos.csv')
+comments_df = pd.read_csv('youtube_comments.csv')
+# === STEP 2: Identify Top Tags ===
+from collections import Counter
+all_tags = []
+for tag_string in videos_df['Tags'].dropna():
+    tags = [tag.strip().lower() for tag in tag_string.split(',')]
+    all_tags.extend(tags)
+tag_counter = Counter(all_tags)
+top_tags_df = pd.DataFrame(tag_counter.most_common(30), columns=['Tag', 'Count'])
+# === STEP 3: Categorize Tags into Coordinates ===
+categories = {
+    "Putin": {"tags": ['путин', 'владимир путин'], "coordinates": (1, 0)},
+    "Navalny+FBK": {"tags": ['фбк', 'навальный', 'певчих', 'фонд борьбы с коррупцией', 'волков', 'сериал', 'алексей навальный'], "coordinates": (0, 1)},
+    "What happened in 1990s?": {"tags": ['предатели', 'ходорковский', 'абрамович', 'ельцин'], "coordinates": (-1, 0)},
+    "Trump’s role": {"tags": ['трамп', 'переговоры'], "coordinates": (0, -1)}
+}
+organized_tags = []
+for _, row in top_tags_df.iterrows():
+    tag = row['Tag'].strip().lower()
+    count = row['Count']
+    for category, data in categories.items():
+        if tag in data['tags']:
+            organized_tags.append({
+                'Tag': tag,
+                'Count': count,
+                'Category': category,
+                'Coordinates': data['coordinates']
+            })
+            break
+categorized_tags_df = pd.DataFrame(organized_tags)
+# === STEP 4: Translate Tags to English ===
+translated_tags = []
+for tag in categorized_tags_df['Tag']:
+    try:
+        translated_tags.append(GoogleTranslator(source='auto', target='en').translate(tag))
+    except:
+        translated_tags.append(tag)
+categorized_tags_df['Tag_English'] = translated_tags
+# === STEP 5: Assign Colors to Channels ===
+unique_channels = videos_df['Channel'].unique()
+colormap = cm.get_cmap('tab20')
+channel_colors = {channel: colormap(i / len(unique_channels))[:3] for i, channel in enumerate(unique_channels)}
+videos_df['Color'] = videos_df['Channel'].map(channel_colors)
+# === STEP 6: Compute Video Positions by Tags ===
+def rgb_to_hex(color_val):
+    if isinstance(color_val, str): color_val = eval(color_val)
+    if isinstance(color_val, np.ndarray): color_val = tuple(color_val)
+    return mcolors.to_hex(color_val)
+tag_to_coords = {row['Tag_English']: row['Coordinates'] for _, row in categorized_tags_df.iterrows()}
+video_positions, video_labels, video_colors, channel_legend = {}, {}, {}, {}
+for _, row in videos_df.iterrows():
+    video_id = row['Video ID']
+    if pd.isna(row['Tags']): continue
+    tags = [t.strip().lower() for t in row['Tags'].split(',')]
+    coords, translated = [], []
+    for tag in tags:
+        match = categorized_tags_df[categorized_tags_df['Tag'] == tag]
+        if not match.empty:
+            coords.append(match.iloc[0]['Coordinates'])
+            translated.append(match.iloc[0]['Tag_English'])
+    if coords:
+        x_avg = sum(c[0] for c in coords) / len(coords)
+        y_avg = sum(c[1] for c in coords) / len(coords)
+        video_positions[video_id] = (x_avg, y_avg)
+        video_labels[video_id] = ", ".join(translated)
+        hex_color = rgb_to_hex(row['Color'])
+        video_colors[video_id] = hex_color
+        channel = row['Channel'] if isinstance(row['Channel'], str) else 'Unknown'
+        channel_legend[channel] = hex_color
+# === STEP 7: Compute Comment-Based Categories ===
+user_videos = comments_df.groupby('Author')['Video ID'].unique()
+categorized_users = []
+from itertools import combinations
+for author, vids in user_videos.items():
+    if len(vids) < 2: continue
+    for v1, v2 in combinations(sorted(vids), 2):
+        categorized_users.append({'Author': author, 'Category': f"{v1}__{v2}"})
+categorized_df = pd.DataFrame(categorized_users)
+category_counts = categorized_df.groupby('Category')['Author'].nunique().reset_index()
+category_counts = category_counts.rename(columns={'Author': 'UserCount'})
+ranked_categories_df = category_counts.sort_values(by='UserCount', ascending=False)
+# === STEP 8: Edge Colors by Rank (Custom Distinct Tints) ===
+palette = ['#FFC0CB', '#FF69B4', '#FF4500', '#8B0000']  # pink, hotpink, orange-red, dark red
+ranked_categories_df['Rank'] = ranked_categories_df['UserCount'].rank(method='min', ascending=False)
+max_rank = ranked_categories_df['Rank'].max()
+min_rank = ranked_categories_df['Rank'].min()
+def tint_color(rank):
+    scale = (rank - min_rank) / (max_rank - min_rank)
+    idx = int(scale * (len(palette)-1))
+    return mcolors.to_rgb(palette[idx])
+edges, legend_samples = [], []
+for _, row in ranked_categories_df.iterrows():
+    try:
+        v1, v2 = row['Category'].split('__')
+        if v1 in video_positions and v2 in video_positions:
+            color = tint_color(row['Rank'])
+            edges.append((video_positions[v1], video_positions[v2], color, row['UserCount']))
+            legend_samples.append((color, row['UserCount']))
+    except:
+        continue
+# === STEP 9: Plot Graph ===
+plt.figure(figsize=(22, 20))
+for pos1, pos2, color, _ in edges:
+    plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], color=color, linewidth=2.5, alpha=0.9)
+for vid, (x, y) in video_positions.items():
+    plt.scatter(x, y, c=video_colors[vid], s=250, edgecolors='black')
+for vid, (x, y) in video_positions.items():
+    label = video_labels.get(vid, '')
+    plt.text(x + 0.05, y + 0.05, label, fontsize=10, fontweight='bold')
+plt.axhline(0, color='black', linewidth=1)
+plt.axvline(0, color='black', linewidth=1)
+plt.xlabel('Dimension 1', fontsize=16, fontweight='bold')
+plt.ylabel('Dimension 2', fontsize=16, fontweight='bold')
+plt.title('Video Network — Shared Commenters & Topics by Tag Coordinates', fontsize=20, fontweight='bold')
+plt.grid(True)
+# === Legends ===
+channel_legend_handles = [
+    Line2D([0], [0], marker='o', color='w', label=ch,
+           markerfacecolor=col, markersize=10)
+    for ch, col in channel_legend.items()
+]
+legend_samples = sorted(legend_samples, key=lambda x: x[1], reverse=True)
+seen, edge_legend = set(), []
+for color, count in legend_samples:
+    rounded = round(count, -1)
+    if rounded not in seen:
+        seen.add(rounded)
+        edge_legend.append(Line2D([0], [0], color=color, linewidth=3, label=f'{rounded}+ commenters'))
+    if len(edge_legend) >= 5:
+        break
+plt.legend(handles=channel_legend_handles + edge_legend,
+           title='Legend: Channels + Shared Commenters (edge color)',
+           bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.tight_layout()
+plt.show()
+
+
+Our Graph: 
+
+
+It is impressive, but the distinctions of colors are not reflected in the legend, and while the graph looks beautiful, it still is hard to tell what videos have the most number of shared commenters. 
+In this light, we decide to stick to four categories of edges: 1 = Green, 2 = Yellow, 3 = Orange, 4 = Red. Where the Green category stands for the least number of shared commenters and Red for the largest number of shared commenters. 
+Additionally, we make two adjustments. One is to make the nodes (with the colors of the channels) significantly  bigger and move them to the surface level, so the edges would not overlap them. 
+The second adjustment is to make the titles with the tags three times bigger and make sure that they do not overlap. 
+
+The Code: 
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+import matplotlib.colors as mcolors
+from deep_translator import GoogleTranslator
+import numpy as np
+from adjustText import adjust_text
+import matplotlib.cm as cm
+import ast
+from itertools import combinations
+# === STEP 1: Load Input Files ===
+videos_df = pd.read_csv('videos.csv')
+comments_df = pd.read_csv('youtube_comments.csv')
+# === STEP 2: Identify Top Tags ===
+from collections import Counter
+all_tags = []
+for tag_string in videos_df['Tags'].dropna():
+    tags = [tag.strip().lower() for tag in tag_string.split(',')]
+    all_tags.extend(tags)
+tag_counter = Counter(all_tags)
+top_tags_df = pd.DataFrame(tag_counter.most_common(30), columns=['Tag', 'Count'])
+# === STEP 3: Categorize Tags into Coordinates ===
+categories = {
+    "Putin": {"tags": ['путин', 'владимир путин'], "coordinates": (1, 0)},
+    "Navalny+FBK": {"tags": ['фбк', 'навальный', 'певчих', 'фонд борьбы с коррупцией', 'волков', 'сериал', 'алексей навальный'], "coordinates": (0, 1)},
+    "What happened in 1990s?": {"tags": ['предатели', 'ходорковский', 'абрамович', 'ельцин'], "coordinates": (-1, 0)},
+    "Trump’s role": {"tags": ['трамп', 'переговоры'], "coordinates": (0, -1)}
+}
+organized_tags = []
+for _, row in top_tags_df.iterrows():
+    tag = row['Tag'].strip().lower()
+    count = row['Count']
+    for category, data in categories.items():
+        if tag in data['tags']:
+            organized_tags.append({
+                'Tag': tag,
+                'Count': count,
+                'Category': category,
+                'Coordinates': data['coordinates']
+            })
+            break
+categorized_tags_df = pd.DataFrame(organized_tags)
+# === STEP 4: Translate Tags to English ===
+translated_tags = []
+for tag in categorized_tags_df['Tag']:
+    try:
+        translated_tags.append(GoogleTranslator(source='auto', target='en').translate(tag))
+    except:
+        translated_tags.append(tag)
+categorized_tags_df['Tag_English'] = translated_tags
+# === STEP 5: Assign Colors to Channels ===
+unique_channels = videos_df['Channel'].unique()
+colormap = cm.get_cmap('tab20', len(unique_channels))
+channel_colors = {channel: colormap(i)[:3] for i, channel in enumerate(unique_channels)}
+videos_df['Color'] = videos_df['Channel'].map(channel_colors)
+# === STEP 6: Compute Video Positions by Tags ===
+def rgb_to_hex(color_val):
+    if isinstance(color_val, str): color_val = eval(color_val)
+    if isinstance(color_val, np.ndarray): color_val = tuple(color_val)
+    return mcolors.to_hex(color_val)
+tag_to_coords = {row['Tag_English']: row['Coordinates'] for _, row in categorized_tags_df.iterrows()}
+video_positions, video_labels, video_colors, channel_legend = {}, {}, {}, {}
+for _, row in videos_df.iterrows():
+    video_id = row['Video ID']
+    if pd.isna(row['Tags']): continue
+    tags = [t.strip().lower() for t in row['Tags'].split(',')]
+    coords, translated = [], []
+    for tag in tags:
+        match = categorized_tags_df[categorized_tags_df['Tag'] == tag]
+        if not match.empty:
+            coords.append(match.iloc[0]['Coordinates'])
+            translated.append(match.iloc[0]['Tag_English'])
+    if coords:
+        x_avg = sum(c[0] for c in coords) / len(coords)
+        y_avg = sum(c[1] for c in coords) / len(coords)
+        video_positions[video_id] = (x_avg, y_avg)
+        video_labels[video_id] = ", ".join(translated)
+        hex_color = rgb_to_hex(row['Color'])
+        video_colors[video_id] = hex_color
+        channel = row['Channel'] if isinstance(row['Channel'], str) else 'Unknown'
+        channel_legend[channel] = hex_color
+# === STEP 7: Comment-Based Categories ===
+user_videos = comments_df.groupby('Author')['Video ID'].unique()
+categorized_users = []
+for author, vids in user_videos.items():
+    if len(vids) < 2: continue
+    for v1, v2 in combinations(sorted(vids), 2):
+        categorized_users.append({'Author': author, 'Category': f"{v1}__{v2}"})
+categorized_df = pd.DataFrame(categorized_users)
+category_counts = categorized_df.groupby('Category')['Author'].nunique().reset_index()
+category_counts = category_counts.rename(columns={'Author': 'UserCount'})
+ranked_categories_df = category_counts.sort_values(by='UserCount', ascending=False)
+# === STEP 8: Edge Coloring: 4 Levels ===
+def get_edge_color(user_count):
+    if user_count < 10:
+        return 'green'
+    elif user_count < 50:
+        return 'yellow'
+    elif user_count < 150:
+        return 'orange'
+    else:
+        return 'red'
+edges = []
+legend_samples = []
+for _, row in ranked_categories_df.iterrows():
+    try:
+        v1, v2 = row['Category'].split('__')
+        if v1 in video_positions and v2 in video_positions:
+            color = get_edge_color(row['UserCount'])
+            edges.append((video_positions[v1], video_positions[v2], color))
+            legend_samples.append((color, row['UserCount']))
+    except:
+        continue
+# === STEP 9: Plot Graph ===
+plt.figure(figsize=(22, 20))
+# Draw edges first
+for pos1, pos2, color in edges:
+    plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], color=color, linewidth=3.5, alpha=0.8, zorder=1)
+# Draw nodes on top
+for vid, (x, y) in video_positions.items():
+    plt.scatter(x, y, c=video_colors[vid], s=500, edgecolors='black', zorder=2)
+# Annotate titles with larger size and prevent overlap
+texts = []
+for vid, (x, y) in video_positions.items():
+    label = video_labels.get(vid, '')
+    texts.append(plt.text(x + 0.05, y + 0.05, label, fontsize=30, fontweight='bold', zorder=3))
+adjust_text(texts, arrowprops=dict(arrowstyle='-', color='gray', lw=0.5))
+# Axis and title
+plt.axhline(0, color='black', linewidth=1)
+plt.axvline(0, color='black', linewidth=1)
+plt.xlabel('Dimension 1', fontsize=16, fontweight='bold')
+plt.ylabel('Dimension 2', fontsize=16, fontweight='bold')
+plt.title('Shared Commenter Network with Category-Based Edge Colors', fontsize=20, fontweight='bold')
+plt.grid(True)
+# Legend
+channel_legend_handles = [
+    Line2D([0], [0], marker='o', color='w', label=ch,
+           markerfacecolor=col, markersize=12)
+    for ch, col in channel_legend.items()
+]
+edge_legend_handles = [
+    Line2D([0], [0], color='green', lw=3, label='1–9 commenters'),
+    Line2D([0], [0], color='yellow', lw=3, label='10–49 commenters'),
+    Line2D([0], [0], color='orange', lw=3, label='50–149 commenters'),
+    Line2D([0], [0], color='red', lw=3, label='150+ commenters')
+]
+plt.legend(handles=channel_legend_handles + edge_legend_handles,
+           title='Legend: Channels & Shared Commenters',
+           bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.tight_layout()
+plt.show()
+
+
+Our Graph:
+
+As we can see the parts of our graph are positioned outside of the scale. We make sure that the scaling allows for our whole graph to be depicted and visibly comprehensible. 
+
+Our code: 
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+import matplotlib.colors as mcolors
+from deep_translator import GoogleTranslator
+import numpy as np
+from adjustText import adjust_text
+import matplotlib.cm as cm
+import ast
+from itertools import combinations
+# === STEP 1: Load Input Files ===
+videos_df = pd.read_csv('videos.csv')
+comments_df = pd.read_csv('youtube_comments.csv')
+# === STEP 2: Identify Top Tags ===
+from collections import Counter
+all_tags = []
+for tag_string in videos_df['Tags'].dropna():
+    tags = [tag.strip().lower() for tag in tag_string.split(',')]
+    all_tags.extend(tags)
+tag_counter = Counter(all_tags)
+top_tags_df = pd.DataFrame(tag_counter.most_common(30), columns=['Tag', 'Count'])
+# === STEP 3: Categorize Tags into Coordinates ===
+categories = {
+    "Putin": {"tags": ['путин', 'владимир путин'], "coordinates": (1, 0)},
+    "Navalny+FBK": {"tags": ['фбк', 'навальный', 'певчих', 'фонд борьбы с коррупцией', 'волков', 'сериал', 'алексей навальный'], "coordinates": (0, 1)},
+    "What happened in 1990s?": {"tags": ['предатели', 'ходорковский', 'абрамович', 'ельцин'], "coordinates": (-1, 0)},
+    "Trump’s role": {"tags": ['трамп', 'переговоры'], "coordinates": (0, -1)}
+}
+organized_tags = []
+for _, row in top_tags_df.iterrows():
+    tag = row['Tag'].strip().lower()
+    count = row['Count']
+    for category, data in categories.items():
+        if tag in data['tags']:
+            organized_tags.append({
+                'Tag': tag,
+                'Count': count,
+                'Category': category,
+                'Coordinates': data['coordinates']
+            })
+            break
+categorized_tags_df = pd.DataFrame(organized_tags)
+# === STEP 4: Translate Tags to English ===
+translated_tags = []
+for tag in categorized_tags_df['Tag']:
+    try:
+        translated_tags.append(GoogleTranslator(source='auto', target='en').translate(tag))
+    except:
+        translated_tags.append(tag)
+categorized_tags_df['Tag_English'] = translated_tags
+# === STEP 5: Assign Colors to Channels ===
+unique_channels = videos_df['Channel'].unique()
+colormap = cm.get_cmap('tab20', len(unique_channels))
+channel_colors = {channel: colormap(i % colormap.N)[:3] for i, channel in enumerate(unique_channels)}
+videos_df['Color'] = videos_df['Channel'].map(channel_colors)
+# === STEP 6: Compute Video Positions by Tags ===
+def rgb_to_hex(color_val):
+    if isinstance(color_val, str): color_val = eval(color_val)
+    if isinstance(color_val, np.ndarray): color_val = tuple(color_val)
+    return mcolors.to_hex(color_val)
+tag_to_coords = {row['Tag_English']: row['Coordinates'] for _, row in categorized_tags_df.iterrows()}
+video_positions, video_labels, video_colors, channel_legend = {}, {}, {}, {}
+for _, row in videos_df.iterrows():
+    video_id = row['Video ID']
+    if pd.isna(row['Tags']): continue
+    tags = [t.strip().lower() for t in row['Tags'].split(',')]
+    coords, translated = [], []
+    for tag in tags:
+        match = categorized_tags_df[categorized_tags_df['Tag'] == tag]
+        if not match.empty:
+            coords.append(match.iloc[0]['Coordinates'])
+            translated.append(match.iloc[0]['Tag_English'])
+    if coords:
+        x_avg = sum(c[0] for c in coords) / len(coords)
+        y_avg = sum(c[1] for c in coords) / len(coords)
+        video_positions[video_id] = (x_avg, y_avg)
+        video_labels[video_id] = ", ".join(translated)
+        hex_color = rgb_to_hex(row['Color'])
+        video_colors[video_id] = hex_color
+        channel = row['Channel'] if isinstance(row['Channel'], str) else 'Unknown'
+        channel_legend[channel] = hex_color
+# === STEP 7: Compute Comment-Based Categories ===
+user_videos = comments_df.groupby('Author')['Video ID'].unique()
+categorized_users = []
+for author, vids in user_videos.items():
+    if len(vids) < 2: continue
+    for v1, v2 in combinations(sorted(vids), 2):
+        categorized_users.append({'Author': author, 'Category': f"{v1}__{v2}"})
+categorized_df = pd.DataFrame(categorized_users)
+category_counts = categorized_df.groupby('Category')['Author'].nunique().reset_index()
+category_counts = category_counts.rename(columns={'Author': 'UserCount'})
+ranked_categories_df = category_counts.sort_values(by='UserCount', ascending=False)
+# === STEP 8: Categorize Edge Colors ===
+def get_edge_color(count):
+    if count >= 200:
+        return 'red'
+    elif count >= 100:
+        return 'orange'
+    elif count >= 50:
+        return 'yellow'
+    else:
+        return 'green'
+edges = []
+for _, row in ranked_categories_df.iterrows():
+    try:
+        v1, v2 = row['Category'].split('__')
+        if v1 in video_positions and v2 in video_positions:
+            color = get_edge_color(row['UserCount'])
+            edges.append((video_positions[v1], video_positions[v2], color, row['UserCount']))
+    except:
+        continue
+# === STEP 9: Plot Graph ===
+plt.figure(figsize=(24, 22))
+for pos1, pos2, color, _ in edges:
+    plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], color=color, linewidth=3, alpha=0.9)
+for vid, (x, y) in video_positions.items():
+    plt.scatter(x, y, c=video_colors[vid], s=500, edgecolors='black', zorder=3)
+# Label positioning and adjustment
+texts = []
+for vid, (x, y) in video_positions.items():
+    label = video_labels.get(vid, '')
+    texts.append(plt.text(x, y, label, fontsize=18, fontweight='bold', zorder=4))
+adjust_text(texts, arrowprops=dict(arrowstyle='-', color='gray'), only_move={'points':'y', 'texts':'y'}, autoalign='y')
+# Axes, Title, Grid
+plt.axhline(0, color='black', linewidth=1)
+plt.axvline(0, color='black', linewidth=1)
+plt.xlabel('Dimension 1', fontsize=16, fontweight='bold')
+plt.ylabel('Dimension 2', fontsize=16, fontweight='bold')
+plt.title('Video Network — Edge Colors by Shared Commenters (Green → Red)', fontsize=22, fontweight='bold')
+plt.grid(True)
+plt.tight_layout(rect=[0, 0, 0.85, 1])  # Leave space for legend
+# === Legends ===
+channel_legend_handles = [
+    Line2D([0], [0], marker='o', color='w', label=ch,
+           markerfacecolor=col, markersize=10)
+    for ch, col in channel_legend.items()
+]
+edge_legend = [
+    Line2D([0], [0], color='green', linewidth=3, label='10–49 shared commenters'),
+    Line2D([0], [0], color='yellow', linewidth=3, label='50–99 shared commenters'),
+    Line2D([0], [0], color='orange', linewidth=3, label='100–199 shared commenters'),
+    Line2D([0], [0], color='red', linewidth=3, label='200+ shared commenters')
+]
+plt.legend(handles=channel_legend_handles + edge_legend,
+           title='Legend: Channels + Shared Commenters (Edge Color)',
+           bbox_to_anchor=(1.02, 1), loc='upper left')
+plt.show()
+
+
+Our Graph: 
+
+
+
+We see that at this step: 
+
+# === STEP 8: Edge Coloring by Category (4 levels) ===
+edges = []
+legend_edges = []
+for (v1, v2), count in pair_counts.items():
+   if count < 10:
+       color = 'green'; label = '10–29 commenters'
+   elif count < 30:
+       color = 'yellow'; label = '30–59 commenters'
+   elif count < 60:
+       color = 'orange'; label = '60–99 commenters'
+   else:
+       color = 'red'; label = '100+ commenters'
+
+
+The categorization is not the most efficient . So I ask what is the average number of shared users among two random videos. 
+
+Our code: 
+import random
+#  Compute shared commenters for all video pairs
+video_authors = comments_df.groupby('Video ID')['Author'].apply(set).to_dict()
+pair_shared_counts = []
+video_ids = list(video_authors.keys())
+for i in range(len(video_ids)):
+    for j in range(i + 1, len(video_ids)):
+        v1, v2 = video_ids[i], video_ids[j]
+        shared = video_authors[v1] & video_authors[v2]
+        pair_shared_counts.append((v1, v2, len(shared)))
+#  Sample two random pairs and show average shared commenters
+random_pair = random.choice(pair_shared_counts)
+v1, v2, shared_count = random_pair
+print(f"Random pair:\nVideo 1: {v1}\nVideo 2: {v2}\nShared commenters: {shared_count}")
+# Overall average across all pairs
+all_avg = sum(x[2] for x in pair_shared_counts) / len(pair_shared_counts)
+print(f"\nOverall average shared commenters per video pair: {all_avg:.2f}")
+
+The number is 403.47 
+
+I ask what is the biggest and the smallest number. 
+
+Our code: 
+#  Compute shared commenters for all video pairs
+video_authors = comments_df.groupby('Author')['Video ID'].unique()
+pair_counts = {}
+from itertools import combinations
+for _, video_list in video_authors.items():
+    if len(video_list) < 2:
+        continue
+    for v1, v2 in combinations(sorted(video_list), 2):
+        pair = tuple(sorted((v1, v2)))
+        pair_counts[pair] = pair_counts.get(pair, 0) + 1
+#  Find max and min (non-zero) shared commenters
+if pair_counts:
+    max_pair = max(pair_counts.items(), key=lambda x: x[1])
+    min_pair = min(pair_counts.items(), key=lambda x: x[1])
+    print(f" Most shared commenters:\nVideo Pair: {max_pair[0]}\nShared Commenters: {max_pair[1]}")
+    print(f"\n Least (non-zero) shared commenters:\nVideo Pair: {min_pair[0]}\nShared Commenters: {min_pair[1]}")
+else:
+    print("No video pairs with shared commenters found.")
+
+
+The biggest number is 4598 and the smallest number is 4. 
+
+Therefore, the biggest number of shared commenters between two videos is 4598, the average is 403, and the least is 4. 
+Then, I redefine the categories for coloring the edges. 
+color = 'green'; label = '4 - 403 commenters'
+color = 'yellow'; label = '404 – 1000 commenters’
+color = 'orange'; label = '1001–2000 commenters'
+color = 'red'; label = '2001- 4598 commenters'
+
+Our code: 
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+import matplotlib.colors as mcolors
+from deep_translator import GoogleTranslator
+import numpy as np
+from adjustText import adjust_text
+import matplotlib.cm as cm
+import ast
+from itertools import combinations
+# === STEP 1: Load Input Files ===
+videos_df = pd.read_csv('videos.csv')
+comments_df = pd.read_csv('youtube_comments.csv')
+# === STEP 2: Identify Top Tags ===
+from collections import Counter
+all_tags = []
+for tag_string in videos_df['Tags'].dropna():
+    tags = [tag.strip().lower() for tag in tag_string.split(',')]
+    all_tags.extend(tags)
+tag_counter = Counter(all_tags)
+top_tags_df = pd.DataFrame(tag_counter.most_common(30), columns=['Tag', 'Count'])
+# === STEP 3: Categorize Tags into Coordinates ===
+categories = {
+    "Putin": {"tags": ['путин', 'владимир путин'], "coordinates": (1, 0)},
+    "Navalny+FBK": {"tags": ['фбк', 'навальный', 'певчих', 'фонд борьбы с коррупцией', 'волков', 'сериал', 'алексей навальный'], "coordinates": (0, 1)},
+    "What happened in 1990s?": {"tags": ['предатели', 'ходорковский', 'абрамович', 'ельцин'], "coordinates": (-1, 0)},
+    "Trump’s role": {"tags": ['трамп', 'переговоры'], "coordinates": (0, -1)}
+}
+organized_tags = []
+for _, row in top_tags_df.iterrows():
+    tag = row['Tag'].strip().lower()
+    count = row['Count']
+    for category, data in categories.items():
+        if tag in data['tags']:
+            organized_tags.append({
+                'Tag': tag,
+                'Count': count,
+                'Category': category,
+                'Coordinates': data['coordinates']
+            })
+            break
+categorized_tags_df = pd.DataFrame(organized_tags)
+# === STEP 4: Translate Tags to English ===
+translated_tags = []
+for tag in categorized_tags_df['Tag']:
+    try:
+        translated_tags.append(GoogleTranslator(source='auto', target='en').translate(tag))
+    except:
+        translated_tags.append(tag)
+categorized_tags_df['Tag_English'] = translated_tags
+# === STEP 5: Assign Colors to Channels ===
+unique_channels = videos_df['Channel'].unique()
+colormap = cm.get_cmap('tab20', len(unique_channels))
+channel_colors = {channel: colormap(i % colormap.N)[:3] for i, channel in enumerate(unique_channels)}
+videos_df['Color'] = videos_df['Channel'].map(channel_colors)
+# === STEP 6: Compute Video Positions by Tags ===
+def rgb_to_hex(color_val):
+    if isinstance(color_val, str): color_val = eval(color_val)
+    if isinstance(color_val, np.ndarray): color_val = tuple(color_val)
+    return mcolors.to_hex(color_val)
+tag_to_coords = {row['Tag_English']: row['Coordinates'] for _, row in categorized_tags_df.iterrows()}
+video_positions, video_labels, video_colors, channel_legend = {}, {}, {}, {}
+for _, row in videos_df.iterrows():
+    video_id = row['Video ID']
+    if pd.isna(row['Tags']): continue
+    tags = [t.strip().lower() for t in row['Tags'].split(',')]
+    coords, translated = [], []
+    for tag in tags:
+        match = categorized_tags_df[categorized_tags_df['Tag'] == tag]
+        if not match.empty:
+            coords.append(match.iloc[0]['Coordinates'])
+            translated.append(match.iloc[0]['Tag_English'])
+    if coords:
+        x_avg = sum(c[0] for c in coords) / len(coords)
+        y_avg = sum(c[1] for c in coords) / len(coords)
+        video_positions[video_id] = (x_avg, y_avg)
+        video_labels[video_id] = ", ".join(translated)
+        hex_color = rgb_to_hex(row['Color'])
+        video_colors[video_id] = hex_color
+        channel = row['Channel'] if isinstance(row['Channel'], str) else 'Unknown'
+        channel_legend[channel] = hex_color
+# === STEP 7: Compute Comment-Based Categories ===
+user_videos = comments_df.groupby('Author')['Video ID'].unique()
+categorized_users = []
+for author, vids in user_videos.items():
+    if len(vids) < 2: continue
+    for v1, v2 in combinations(sorted(vids), 2):
+        categorized_users.append({'Author': author, 'Category': f"{v1}__{v2}"})
+categorized_df = pd.DataFrame(categorized_users)
+category_counts = categorized_df.groupby('Category')['Author'].nunique().reset_index()
+category_counts = category_counts.rename(columns={'Author': 'UserCount'})
+ranked_categories_df = category_counts.sort_values(by='UserCount', ascending=False)
+# === STEP 8: Categorize Edge Colors (new thresholds) ===
+def get_edge_color(count):
+    if count <= 403:
+        return 'green'
+    elif count <= 1000:
+        return 'yellow'
+    elif count <= 2000:
+        return 'orange'
+    else:
+        return 'red'
+edges = []
+for _, row in ranked_categories_df.iterrows():
+    try:
+        v1, v2 = row['Category'].split('__')
+        if v1 in video_positions and v2 in video_positions:
+            color = get_edge_color(row['UserCount'])
+            edges.append((video_positions[v1], video_positions[v2], color, row['UserCount']))
+    except:
+        continue
+# === STEP 9: Plot Graph ===
+plt.figure(figsize=(24, 22))
+for pos1, pos2, color, _ in edges:
+    plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], color=color, linewidth=3, alpha=0.9)
+for vid, (x, y) in video_positions.items():
+    plt.scatter(x, y, c=video_colors[vid], s=500, edgecolors='black', zorder=3)
+# Label positioning and adjustment
+texts = []
+for vid, (x, y) in video_positions.items():
+    label = video_labels.get(vid, '')
+    texts.append(plt.text(x, y, label, fontsize=18, fontweight='bold', zorder=4))
+adjust_text(texts, arrowprops=dict(arrowstyle='-', color='gray'), only_move={'points':'y', 'texts':'y'}, autoalign='y')
+# Axes, Title, Grid
+plt.axhline(0, color='black', linewidth=1)
+plt.axvline(0, color='black', linewidth=1)
+plt.xlabel('Dimension 1', fontsize=16, fontweight='bold')
+plt.ylabel('Dimension 2', fontsize=16, fontweight='bold')
+plt.title('Video Network — Edge Colors by Shared Commenters (Green → Red)', fontsize=22, fontweight='bold')
+plt.grid(True)
+plt.tight_layout(rect=[0, 0, 0.85, 1])  # Leave space for legend
+# === Legends ===
+channel_legend_handles = [
+    Line2D([0], [0], marker='o', color='w', label=ch,
+           markerfacecolor=col, markersize=10)
+    for ch, col in channel_legend.items()
+]
+edge_legend = [
+    Line2D([0], [0], color='green', linewidth=3, label='4–403 shared commenters'),
+    Line2D([0], [0], color='yellow', linewidth=3, label='404–1000 shared commenters'),
+    Line2D([0], [0], color='orange', linewidth=3, label='1001–2000 shared commenters'),
+    Line2D([0], [0], color='red', linewidth=3, label='2001–4598 shared commenters')
+]
+plt.legend(handles=channel_legend_handles + edge_legend,
+           title='Legend: Channels + Shared Commenters (Edge Color)',
+           bbox_to_anchor=(1.02, 1), loc='upper left')
+plt.show()
+
+
+
+The last modification: we want the titles for the nodes containing the tags to be on the surface level, so they would be visible. 
+Our Code: 
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+import matplotlib.colors as mcolors
+from deep_translator import GoogleTranslator
+import numpy as np
+from adjustText import adjust_text
+import matplotlib.cm as cm
+import ast
+from itertools import combinations
+# === STEP 1: Load Input Files ===
+videos_df = pd.read_csv('videos.csv')
+comments_df = pd.read_csv('youtube_comments.csv')
+# === STEP 2: Identify Top Tags ===
+from collections import Counter
+all_tags = []
+for tag_string in videos_df['Tags'].dropna():
+    tags = [tag.strip().lower() for tag in tag_string.split(',')]
+    all_tags.extend(tags)
+tag_counter = Counter(all_tags)
+top_tags_df = pd.DataFrame(tag_counter.most_common(30), columns=['Tag', 'Count'])
+# === STEP 3: Categorize Tags into Coordinates ===
+categories = {
+    "Putin": {"tags": ['путин', 'владимир путин'], "coordinates": (1, 0)},
+    "Navalny+FBK": {"tags": ['фбк', 'навальный', 'певчих', 'фонд борьбы с коррупцией', 'волков', 'сериал', 'алексей навальный'], "coordinates": (0, 1)},
+    "What happened in 1990s?": {"tags": ['предатели', 'ходорковский', 'абрамович', 'ельцин'], "coordinates": (-1, 0)},
+    "Trump’s role": {"tags": ['трамп', 'переговоры'], "coordinates": (0, -1)}
+}
+organized_tags = []
+for _, row in top_tags_df.iterrows():
+    tag = row['Tag'].strip().lower()
+    count = row['Count']
+    for category, data in categories.items():
+        if tag in data['tags']:
+            organized_tags.append({
+                'Tag': tag,
+                'Count': count,
+                'Category': category,
+                'Coordinates': data['coordinates']
+            })
+            break
+categorized_tags_df = pd.DataFrame(organized_tags)
+# === STEP 4: Translate Tags to English ===
+translated_tags = []
+for tag in categorized_tags_df['Tag']:
+    try:
+        translated_tags.append(GoogleTranslator(source='auto', target='en').translate(tag))
+    except:
+        translated_tags.append(tag)
+categorized_tags_df['Tag_English'] = translated_tags
+# === STEP 5: Assign Colors to Channels ===
+unique_channels = videos_df['Channel'].unique()
+colormap = cm.get_cmap('tab20')
+channel_colors = {channel: colormap(i % colormap.N)[:3] for i, channel in enumerate(unique_channels)}
+videos_df['Color'] = videos_df['Channel'].map(channel_colors)
+# === STEP 6: Compute Video Positions by Tags ===
+def rgb_to_hex(color_val):
+    if isinstance(color_val, str): color_val = eval(color_val)
+    if isinstance(color_val, np.ndarray): color_val = tuple(color_val)
+    return mcolors.to_hex(color_val)
+tag_to_coords = {row['Tag_English']: row['Coordinates'] for _, row in categorized_tags_df.iterrows()}
+video_positions, video_labels, video_colors, channel_legend = {}, {}, {}, {}
+for _, row in videos_df.iterrows():
+    video_id = row['Video ID']
+    if pd.isna(row['Tags']): continue
+    tags = [t.strip().lower() for t in row['Tags'].split(',')]
+    coords, translated = [], []
+    for tag in tags:
+        match = categorized_tags_df[categorized_tags_df['Tag'] == tag]
+        if not match.empty:
+            coords.append(match.iloc[0]['Coordinates'])
+            translated.append(match.iloc[0]['Tag_English'])
+    if coords:
+        x_avg = sum(c[0] for c in coords) / len(coords)
+        y_avg = sum(c[1] for c in coords) / len(coords)
+        video_positions[video_id] = (x_avg, y_avg)
+        video_labels[video_id] = ", ".join(translated)
+        hex_color = rgb_to_hex(row['Color'])
+        video_colors[video_id] = hex_color
+        channel = row['Channel'] if isinstance(row['Channel'], str) else 'Unknown'
+        channel_legend[channel] = hex_color
+# === STEP 7: Compute Comment-Based Categories ===
+user_videos = comments_df.groupby('Author')['Video ID'].unique()
+categorized_users = []
+for author, vids in user_videos.items():
+    if len(vids) < 2: continue
+    for v1, v2 in combinations(sorted(vids), 2):
+        categorized_users.append({'Author': author, 'Category': f"{v1}__{v2}"})
+categorized_df = pd.DataFrame(categorized_users)
+category_counts = categorized_df.groupby('Category')['Author'].nunique().reset_index()
+category_counts = category_counts.rename(columns={'Author': 'UserCount'})
+ranked_categories_df = category_counts.sort_values(by='UserCount', ascending=False)
+# === STEP 8: Categorize Edge Colors ===
+def get_edge_color(count):
+    if count >= 2001:
+        return 'red'
+    elif count >= 1001:
+        return 'orange'
+    elif count >= 404:
+        return 'yellow'
+    else:
+        return 'green'
+edges = []
+for _, row in ranked_categories_df.iterrows():
+    try:
+        v1, v2 = row['Category'].split('__')
+        if v1 in video_positions and v2 in video_positions:
+            color = get_edge_color(row['UserCount'])
+            edges.append((video_positions[v1], video_positions[v2], color, row['UserCount']))
+    except:
+        continue
+# === STEP 9: Plot Graph ===
+plt.figure(figsize=(24, 22))
+for pos1, pos2, color, _ in edges:
+    plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], color=color, linewidth=3, alpha=0.8, zorder=1)
+for vid, (x, y) in video_positions.items():
+    plt.scatter(x, y, c=video_colors[vid], s=700, edgecolors='black', zorder=3)
+# Label positioning and adjustment
+texts = []
+for vid, (x, y) in video_positions.items():
+    label = video_labels.get(vid, '')
+    texts.append(plt.text(x, y, label, fontsize=20, fontweight='bold', zorder=4))
+adjust_text(texts, arrowprops=dict(arrowstyle='-', color='gray'), only_move={'points':'y', 'texts':'y'}, autoalign='y')
+# Axes, Title, Grid
+plt.axhline(0, color='black', linewidth=1)
+plt.axvline(0, color='black', linewidth=1)
+plt.xlabel('Dimension 1', fontsize=16, fontweight='bold')
+plt.ylabel('Dimension 2', fontsize=16, fontweight='bold')
+plt.title('Video Network — Shared Commenter Categories (Green → Red)', fontsize=22, fontweight='bold')
+plt.grid(True)
+plt.tight_layout(rect=[0, 0, 0.85, 1])
+# === Legends ===
+channel_legend_handles = [
+    Line2D([0], [0], marker='o', color='w', label=ch,
+           markerfacecolor=col, markersize=10)
+    for ch, col in channel_legend.items()
+]
+edge_legend = [
+    Line2D([0], [0], color='green', linewidth=3, label='4–403 shared commenters'),
+    Line2D([0], [0], color='yellow', linewidth=3, label='404–1000 shared commenters'),
+    Line2D([0], [0], color='orange', linewidth=3, label='1001–2000 shared commenters'),
+    Line2D([0], [0], color='red', linewidth=3, label='2001–4598 shared commenters')
+]
+plt.legend(handles=channel_legend_handles + edge_legend,
+           title='Legend: Channels + Shared Commenters (Edge Color)',
+           bbox_to_anchor=(1.02, 1), loc='upper left')
+plt.show()
+
+Our Graph: 
+
 </pre>
 
 <p>Our Graph:</p>
