@@ -4,18 +4,33 @@
   <meta charset="UTF-8">
   <title>SNA Project – Dataset Generation</title>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+    }
+
     body {
       font-family: monospace;
       background-color: white;
       color: #000;
       padding: 40px;
-      margin: 0;
+      padding-top: 80px; /* Space for fixed nav bar */
     }
 
     nav {
       background-color: #2c3e50;
       padding: 10px;
-      margin: 0;
+      width: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
     }
 
     nav a {
@@ -67,7 +82,6 @@
     <a href="/SNA2/dataset.html">Dataset Generation</a>
     <a href="/SNA2/code.html#downloads">Downloads</a>
     <a href="/SNA2/analysis.html">Data Analysis</a>
-
   </nav>
 
   <h1>Dataset Generation</h1>
@@ -106,36 +120,20 @@ https://www.youtube.com/watch?v=oCSmIZPoxGM
 https://www.youtube.com/watch?v=p57ikQ0l97Y
 https://www.youtube.com/watch?v=Qw1fsunO11Q
 
-
-
-
-
-
-
-
-
-
-
-
 Part 2: We used google collab to extract video titles, video ids, channels, tags, view counts, like counts, and comment counts into one csv file.
 
 Step 1:
 Generate the Google API for further usage:
 
-
-
 Step 2: Install Required Libraries Run the following command in Colab:
-
 !pip install google-api-python-client pandas
 
 Step 3: Import Libraries
-
 from googleapiclient.discovery import build
 import pandas as pd
 
 Step 4: Set Up API Key and Video IDs
-
-API_KEY = ' AIzaSyAUUwuf_vofeMpwo4qcmWHn_a_iWafPE1E '
+API_KEY = 'AIzaSyAUUwuf_vofeMpwo4qcmWHn_a_iWafPE1E'
 VIDEO_IDS = ['6xIeLJGcpfU','6uicsdZDw-Y','0Q5BY7N6Vv8','rX5apWMrf4c',
 '41NI4Y6frAQ','70bt2dBV1zI','0lDM2JVq8Y8','qqCYMqoUa5Q','4b6068q7Jtk',
 'H7KTb_IfJFU','6WW_4D3ARVM','WpOLafcjT4Q','xQoUvHcXqhw',
@@ -149,27 +147,19 @@ youtube = build('youtube', 'v3', developerKey=API_KEY)
 Step 6: Define the get_video_metadata Function
 def get_video_metadata(video_ids):
     video_data = []
-    # Fetch metadata for each video ID
     for video_id in video_ids:
-        request = youtube.videos().list(
-            part="snippet",
-            id=video_id
-        )
+        request = youtube.videos().list(part="snippet,statistics", id=video_id)
         response = request.execute()
-
         for item in response.get("items", []):
             video_id = item["id"]
             title = item["snippet"]["title"]
             channel = item["snippet"]["channelTitle"]
-            tags = item["snippet"].get("tags", [])  # Tags might not always be present
-            tags_str = ", ".join(tags)  # Convert tags list to a single string
-# Extract statistics
-        view_count = item["statistics"].get("viewCount", 0)
-        like_count = item["statistics"].get("likeCount", 0)
-        comment_count = item["statistics"].get("commentCount", 0)
-
-video_data.append([video_id, title, channel, tags_str, view_count, like_count, comment_count])
-
+            tags = item["snippet"].get("tags", [])
+            tags_str = ", ".join(tags)
+            view_count = item["statistics"].get("viewCount", 0)
+            like_count = item["statistics"].get("likeCount", 0)
+            comment_count = item["statistics"].get("commentCount", 0)
+            video_data.append([video_id, title, channel, tags_str, view_count, like_count, comment_count])
     return video_data
 
 Step 7: Fetch Metadata
@@ -181,13 +171,12 @@ df = pd.DataFrame(metadata, columns=["Video ID", "Title", "Channel", "Tags", "Vi
 Step 9: Save DataFrame as a CSV File
 df.to_csv("youtube_video_metadata.csv", index=False, encoding="utf-8")
 
-Step 10: Prints a message to confirm that the data has been saved successfully.
-print ("Metadata has been saved to youtube_video_metadata.csv!")
+Step 10: Print a message to confirm that the data has been saved successfully.
+print("Metadata has been saved to youtube_video_metadata.csv!")
 
 Step 11: Download the CSV File
 from google.colab import files
-files.download('youtube_comments.csv')
+files.download('youtube_video_metadata.csv')
   </pre>
 </body>
 </html>
-
